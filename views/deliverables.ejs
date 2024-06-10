@@ -1,0 +1,2973 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hero Engineering Project Database - <%= projdb.toUpperCase().substr(3) %>
+    </title>
+    <!-- Add your favorite modern CSS framework or styles here -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <link rel="stylesheet"="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" type="text/css" href="/styles/styles-custom.css" />
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://unpkg.com/downloadjs@1.4.7/download.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    
+</head>
+    
+<body>
+    <div class="wrapper">
+        <input type="checkbox" id="btn" hidden>
+        <label for="btn" class="menu-btn">
+            >>
+        <i class="fas fa-bars"></i>
+        <i class="fas fa-times"></i>
+        </label>
+        <nav id="sidebar" tabindex="-1">
+           <div class="title">
+              DB SERVER
+           </div>
+           <ul class="list-items">
+              <li><a href="/"><i class="fas fa-home"></i>Home</a></li>
+              <li><a href="#" id="open-modal-AddDel-button"><i class="fas fa-sliders-h"></i>Add Deliverable</a></li>
+              <li><a href="#" id="open-modal-AddTr-button"><i class="fas fa-address-book"></i>Add Transmittal</a></li>
+              
+              <div class="icons">
+                 <a href="https://openkm.heroengineering.com.au/"><i class="icon-custom-1"></i></a>
+                 <a href="https://timesite.heroengineering.com.au/TimeSite/Timesheet/Default.aspx"><i class="icon-custom-2"></i></a>
+                 <a href="#"><i class="fab fa-github"></i></a>
+                 <a href="#"><i class="fab fa-youtube"></i></a>
+              </div>
+           </ul>
+        </nav>
+     </div>
+   
+    
+    
+    
+
+
+    <div class="content">
+        <div id="header">
+            <img src="images/yellow-logo.png" alt="Yellow Logo" style="width: 100px; height: 40px; margin: 0 auto; float:right">
+            <h1 class="title is-3">Hero Engineering Project Database - <%= projdb.toUpperCase().substr(3) %>
+            </h1>
+            <!-- Add more HTML content for the header as needed -->
+           
+        </div>
+        
+        
+        <div id="deldiv" class="table-responsive" style="text-align: center; font-size:xx-large">
+            <h1 style="font-size: xx-large; font-weight:bold">Deliverables</h1>
+            <table class="table table-bordered table-hover" id="deltable">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Document Number</th>
+                        <th>Sheets</th>
+                        <th></th>
+                        <th>Document Name</th>
+                        <th>Revision</th>
+                        <th>Revision Date</th>
+                        <th>Client Number</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% deliverables.forEach(deliverable=> { %>
+                        <tr class="clickable-row
+                        <% if (deliverable.complete) { %>completed <% } %>
+                        <% if (deliverable.cancelled) { %>cancelled <% } %>
+                        <% if (deliverable.overdue) { %>overdue <% } %>
+                        <% if (!deliverable.complete && !deliverable.cancelled) { %>pending <% } %>
+                        ">
+                            <td class="docno">
+                                <%= deliverable.docno %>
+                            </td>
+                            <td class="sheets">
+                                <%= deliverable.sheets %>
+                            </td>
+                            <td>
+                                <% if (deliverable.safety=== 1) { %> FS <% } %>
+                            </td>
+                            <td class="docname">
+                                <%= deliverable.docname %>
+                            </td>
+                            <td class="revdesc">
+                                <% if (typeof deliverable.rev==='undefined' || deliverable.rev===null) { %>
+                                    -
+                                    <% } else { %>
+
+                                        <%= deliverable.rev[0]  + (deliverable.subrev
+                                            !==null  && deliverable.subrev !== '' ? "." + deliverable.subrev:'') + '-' + deliverable.rev[1] %>
+                                            <% } %>
+
+                            </td>
+                            <td class="rev">
+                                <%= deliverable.revdate %>
+                            </td>
+                            <td class="clientno">
+                                <%= deliverable.clientno===null ? "" : deliverable.clientno %>
+                            </td>
+                            <!-- Add more table cells as needed -->
+                        </tr>
+                        <tr class="subrow">
+                            <td colspan="3"></td>
+                            <td>
+                                <div style="display: inline-block; padding-right: 5px;">
+                                    <button class="btn btn-sm btn-success edit-button"
+                                        data-doc-no="<%= deliverable.docno %>"
+                                        data-doc-name="<%= deliverable.docname %>"
+                                        data-sheets="<%= deliverable.sheets %>"
+                                        data-revision="<%= typeof deliverable.rev === 'undefined' || deliverable.rev === null ? '' : deliverable.rev[0] + '-' + deliverable.rev[1] %>"
+                                        data-revision-date="<%= deliverable.revdate %>"
+                                        data-client-no="<%= deliverable.clientno %>"
+                                        data-safety="<%= deliverable.safety %>">Edit Document...</button>
+                                    <% if ((deliverable.issuedate !='0000-00-00' ) && (deliverable.expretdate
+                                        !='0000-00-00' ) && (deliverable.returndate=='0000-00-00' )) { %>
+                                        <button class="btn btn-sm btn-success return-button" id="return-button"
+                                            data-doc-no="<%= deliverable.docno %>">Return Document...</button>
+                                        <% } %>
+                                            <% var schedate_formatted=new Date(deliverable.schedate); var
+                                                schedate_year=schedate_formatted.getUTCFullYear(); if
+                                                (deliverable.issuedate !='0000-00-00' ) { %>
+                                                - Issued: <%= deliverable.issuedate %>
+
+                                                    <% } else if ((deliverable.schedate !='0000-00-00' ) &&
+                                                        (schedate_year> 1970)) { %>
+                                                        - Scheduled: <%=deliverable.schedate %>
+
+                                                            <% } %>
+                                                                <% if ((deliverable.returndate !='0000-00-00' )) { %>
+                                                                    - Returned: <%=deliverable.returndate %>
+
+                                                                        <% } else if (deliverable.expretdate
+                                                                            !='0000-00-00' ) { %>
+                                                                            - Expected:<%= deliverable.expretdate %>
+
+                                                                                <% } %>
+                                </div>
+
+
+                            </td>
+
+
+                            <td>
+                                <% if (!((deliverable.issuedate !='0000-00-00' ) ^ (deliverable.returndate
+                                    !='0000-00-00' ))) { %>
+                                    <button class="btn btn-sm btn-success supersede-button"
+                                        data-doc-no="<%= deliverable.docno %>"
+                                        data-doc-name="<%= deliverable.docname %>"
+                                        data-sheets="<%= deliverable.sheets %>"
+                                        data-doc-name="<%= deliverable.docname %>"
+                                        data-revision="<%= typeof deliverable.rev === 'undefined' || deliverable.rev === null ? '' : deliverable.rev[0] + '-' + deliverable.rev[1] %>"
+                                        data-revision-date="<%= deliverable.revdate %>"
+                                        data-client-no="<%= deliverable.clientno %>">Supersede Document... </button>
+                                    <% } %>
+                            </td>
+                            <td>
+
+                            </td>
+                            <td>
+
+                            </td>
+                        </tr>
+                        <% }); %>
+                </tbody>
+            </table>
+        </div>
+
+
+        <div id="trtablediv" style="text-align: center; font-size:xx-large">
+            <h1 style="font-size: xx-large; font-weight:bold">Transmittals</h1>
+            <table class="table is-fullwidth is-striped" id="trtable">
+                <thead>
+                    <tr>
+                        <th class="trno">TR No.</th>
+                        <th class="trname">Description</th>
+                        <th class="issuedate">Issued Date</th>
+                        <th class="expretdate">Expected Return</th>
+                        <th class="complete">Returned</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% transmittals.forEach(transmittal=> { %>
+                        <tr class="clickable-row
+                            <% if (transmittal.complete) { %>completed <% } %>
+                            <% if (transmittal.cancelled) { %>cancelled <% } %>
+                            <% if (transmittal.overdue) { %>overdue <% } %>
+                            <% if (!transmittal.complete && !transmittal.cancelled) { %>pending <% } %>"
+                            data-trno="<%= transmittal.trno %>" 
+                            data-trname="<%= transmittal.trname %>"
+                            data-complete="<%= transmittal.complete %>" 
+                            data-cancelled="<%= transmittal.cancelled %>"
+                            data-issuedate="<%= transmittal.issuedate %>"
+                            data-expretdate="<%= transmittal.expretdate %>"
+                            data-transmitto="<%= transmittal.transmitto %>"
+                            data-herocontact="<%= transmittal.herocontact %>"
+                            data-issuedvia="<%= transmittal.issuedvia %>" 
+                            data-approval="<%= transmittal.approval %>"
+                            data-closeout="<%= transmittal.closeout %>"
+                            data-construction="<%= transmittal.construction %>"
+                            data-information="<%= transmittal.information %>"
+                            data-quotation="<%= transmittal.quotation %>" 
+                            data-tender="<%= transmittal.tender %>"
+                            data-remarks="<%= transmittal.remarks %>"
+                            data-transmitted_documents="<%=transmittal.transmitted_documents%>"
+                            data-docno="<%=transmittal.docno%>" 
+                            data-docname="<%=transmittal.docname%>"
+                            data-rev="<%=transmittal.rev%>" 
+                            data-desc="<%=transmittal.desc%>">
+                            <td id="transmittal_number">
+                                <%= transmittal.trno %>
+                            </td>
+                            <td id="transmittal_name">
+                                <%= transmittal.trname %>
+                            </td>
+                            <td id="transmittal_issuedate">
+                                <%= transmittal.issuedate==='0000-00-00' ?'-':transmittal.issuedate %>
+                            </td>
+                            <td id="transmittal_expretdate">
+                                <%= transmittal.expretdate==='0000-00-00' ?'-':transmittal.expretdate%>
+                            </td>
+                            <td>
+                                <% if (transmittal.complete) { %>
+                                    <img src='images/icon_tick.png'>
+                                    <% }else{ %>
+                                        <img src='images/icon_cross.png'>
+                                        <% } %>
+                            </td>
+                        </tr>
+                        <tr class="subrow">
+                            <td>
+
+                            </td>
+                            <td>
+                                <div style="display: inline-block; padding-right: 5px;">
+                                    <button id="view-pdf-button" class="btn">View PDF...</button>
+                                    <% if (!(transmittal.complete) && !(transmittal.cancelled)) { %>
+
+                                        <button  class="btn" id="edit-transmittal">Edit Transmittal...</button>
+
+                                        <% } %>
+                                </div>
+
+                                <div class="transmitted-doc-container">
+                                    <table class="transmitted_doc">
+                                        <tbody>
+                                            <p><u><%= transmittal.transmitted_documents.length>0? transmittal.transmitted_documents.length + ' ' + 'transmitted documents':'' %></u></p>
+                                            <% transmittal.transmitted_documents.forEach(transmitted_doc=> { %>
+                                                <tr>
+                                                    <td class="returned-deliverables">
+                                                        <%= transmitted_doc.trim() %>
+                                                    </td>
+                                                </tr>
+                                                <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+
+
+
+                            </td>
+                            <td>
+
+                            </td>
+                            <td>
+
+                            </td>
+                            <td>
+                                <% if (!(transmittal.complete) && !(transmittal.cancelled)) { %>
+                                    <div style='display: inline-block; padding-right: 5px;'>
+                                        <button class="btn" id="return-transmittal">Return...</button>
+                                    </div>
+                                    <% }else{ %>
+                                        <% console.log("Transmittal returndate:", transmittal.returndate); %>
+                                            <%= transmittal.returndate %>
+
+                                                <% } %>
+                            </td>
+                        </tr>
+                        <% }); %>
+            </table>
+        </div>
+
+
+
+
+        <div id="add-deliverable-modal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head" id="modal-card-header">
+                    <p class="modal-card-title">Add Deliverable</p>
+                    <button id="close-modal-button" class="delete" aria-label="close"></button>
+                </header>
+                <section class="modal-card-body" id="card-body">
+                    <p class="subtitle">Enter the details for the new deliverable:</p>
+                    <table class="tdoctype">
+                        <thead class="deliverable-header">
+                            <tr>
+                                <th></th>
+                                <th colspan="2">Document Type</th>
+                                <th colspan="2">Documents to Reserve</th>
+                            </tr>
+                        </thead>
+                        <tr class="row_doctype">
+                            <td>
+                                <input type="checkbox" id="safety">
+                                <label for="safety">Safety</label>
+                            </td>
+                            <td colspan="2">
+                                <div class="select">
+                                    <select name="doctype" class="form-select" id="doctype" required  >
+                                        <option value="">Select document type</option>
+                                    </select>
+                                </div>
+                            </td>
+                            <td colspan="2">
+                                <input type="text" id="alloc" value="1" size="5">
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="tdrwtype" id="tdrwtype">
+                        <thead>
+                            <tr>
+                                <th>Drawing Type</th>
+                                <th colspan="2">Electrical Drawing Type</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="row_drawingtype" id="r_drawingtype">
+                                <td>
+                                    <div class="select">
+                                        <select name="drawingtype" class="form-select" id="drwtype" required>
+                                            <option value="">Select document type</option>
+                                        </select>
+                                    </div>
+                                </td>
+                                <td colspan="3">
+                                    <div class="select">
+                                        <select name="drawingblock" class="form-select" id="blocktype" required>
+                                            <option value="">Select drawing type</option>
+                                        </select>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="tskmtype" id="tskmtype">
+                        <thead>
+                            <tr class='row_skmtype'>
+                                <th colspan=4>SKM Document Type </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="row_skmtype">
+                                <td colspan=4>
+                                    <div class="select">
+                                        <select name="skmtype" class="form-select" id="skmtype" required>
+                                            <option value="">Select SKM Document Type</option>
+                                        </select>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="details">
+                        <tr>
+                            <th colspan=2>New document number</th>
+                            <th colspan=1>Sheets</th>
+                        </tr>
+                        <tr>
+                            <td class="docno" id="docno">
+                                <!%= docno %>
+                            </td>
+                            <td class="docno2" id="docno2">
+                                <!%= docno2 %>
+                            </td>
+                            <td class="has-text-left" colspan=2><input type="text" id="sheets" value=1 /></td>
+                        </tr>
+                        <tr>
+                            <th colspan="4" id="name">Document Name *</th>
+                        </tr>
+                        <tr>
+                            <td colspan=3><textarea id="docname" rows="2" style="color: #000;" required></textarea></td>
+                        </tr>
+                        <tr>
+                            <th colspan="3">Client Document Number</th>
+                        </tr>
+                        <tr>
+                            <td colspan="3"><input type="text" id="clientno" value=""></td>
+                        </tr>
+                    </table>
+                    <div class="field is-grouped is-grouped-right">
+                        <div class="control"><button id="save-button" class="button is-primary">Save new
+                                deliverable</button></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <div id="edit-modal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Edit Document</p><button class="delete" aria-label="close"
+                        id="edit-modal-close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <!-- Add form fields here -->
+                    <table class="details">
+                        <tr>
+                            <th></th>
+                            <th colspan=1>Document number</th>
+                            <th colspan=2>Sheets</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" id="edit-safety">
+                                <label for="safety">Safety</label>
+                            </td>
+                            <td colspan=2 id="edit-doc-no">
+
+                            </td>
+                            <td class="has-text-left"><input type="text" id="edit-sheets" class="input" value=1
+                                    required></td>
+                        </tr>
+                        <tr>
+                            <th colspan=4> Document Name</th>
+                        </tr>
+                        <tr>
+                            <td colspan=4>
+                                <!-- Added table cell here -->
+                                <textarea id="edit-doc-name" rows="2" style="width: 100%; display: block;"></textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colspan=4>Client Document Number</th>
+                        </tr>
+                        <tr>
+                            <td colspan=4>
+                                <!-- Added table cell here -->
+                                <input id="edit-client-no" rows="2" style="width: 100%; display: block;" \>
+                            </td>
+                        </tr>
+                    </table>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-success" id="edit-modal-save">Save changes</button>
+                    <button class="button" id="edit-modal-cancel">Cancel</button>
+                </footer>
+            </div>
+        </div>
+        <!-- ... -->
+        <!---... -->
+        <div id="supersede-modal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Supersede Revision</p>
+                    <button class="delete" aria-label="close" id="supersede-modal-close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <!-- Add form fields here -->
+                    <table id="details" class="editdel">
+                        <thead>
+                            <tr>
+                                <th colspan="4">Document</th>
+                            </tr>
+                        </thead>
+                        <tr>
+                            <td class='docno' colspan="2" id="supersede-doc-no">
+                                <!%= supersede-doc-no %>
+                            </td>
+                            <td><input type="hidden" id="docno"></td>
+                        </tr>
+                        <thead>
+                            <tr>
+                                <th colspan=4> Past Revisions</th>
+                            </tr>
+                        </thead>
+                        <tr>
+                            <td colspan=2>
+                                <table id="revision-history" class="table is-fullwidth is-striped">
+                                    <tbody></tbody>
+                                </table>
+                            </td>
+                        </tr>
+                        <thead>
+                            <tr>
+                                <th colspan=4> Supersede document to Rev. </th>
+                            </tr>
+                        </thead>
+                        <tr>
+                            <td colspan="2">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td><select id="revision-dropdown">
+                                                    <!-- Options will be populated here -->
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="text" id="subrev" size="6">
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                        <thead>
+                            <tr>
+                                <th colspan="2">Rev. Date</th>
+                                <th colspan="2">Scheduled Issue Date (Not required)</th>
+                            </tr>
+                        </thead>
+                        <tr>
+                            <td colspan="2">
+                                <input type="date" id="revdate">
+                            </td>
+                            <td colspan="2">
+                                <input type="date" id="schedate">
+                            </td>
+                        </tr>
+                    </table>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-success" id="supersede-modal-save">Save changes</button>
+                    <button class="button" id="supersede-modal-cancel">Cancel</button>
+                </footer>
+            </div>
+        </div>
+
+        <div id="return-modal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Project Database - Return Deliverables</p>
+                    <button class="delete" aria-label="close" id="return-modal-close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <!-- Add form fields here -->
+                    <table id="returnDetails" class="returndel">
+                        <thead>
+                            <tr>
+                                <th colspan="6">All Pending Deliverables * - (hold Ctrl to select multiple deliverables)
+                                </th>
+                            </tr>
+                        </thead>
+                        <tr>
+
+                            <td>
+
+                                <input type='text' id='searchdeltext' placeholder="Search Deliverable" size=55%>
+                            </td>
+
+
+                            <td colspan=3>
+                                <div class='delcount'></div>
+                            </td>
+                            <td><input type="hidden" id="docno"></td>
+                        </tr>
+                        <tr>
+
+                            <td>
+                                <select size='10' multiple='multiple' style='width:360px' class='adddel'
+                                    id="addeloption"></select>
+                            </td>
+                            <td>
+                                <button type='button' style='width:95px' id='adddel'>Return >></button>
+                                <br>
+                                <button type='button' style='width:95px' id='remdel'>
+                                    << Pending</button>
+                            </td>
+                            <td>
+                                <select size='10' multiple='multiple' style='width:360px' class='remdel'
+                                    id="remdeloption"></select>
+                            </td>
+                        </tr>
+                        <thead>
+                            <tr>
+
+                                <th colspan="6">Return Date</th>
+
+                            </tr>
+                        </thead>
+                        <tr>
+
+                            <td><input type='date' id='returndate' name='Return Date'></td>
+
+                        </tr>
+                        <thead>
+                            <tr class='saved'>
+
+                            </tr>
+                        </thead>
+                    </table>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="btn" id="return-modal-save">Save changes</button>
+                    <button class="btn" id="return-modal-cancel">Cancel</button>
+                </footer>
+            </div>
+
+
+
+
+
+        </div>
+
+
+        <div id="edit-transmittal-modal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Edit Transmittal</p>
+                    <button class="delete" aria-label="close" id="transmittal-modal-close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <table>
+                        <tr>
+                            <th>
+                                Transmittal Number
+                            </th>
+                            <th>
+                                Issue Date*
+                            </th>
+                            <th>
+                                Expected Return*
+                            </th>
+                        </tr>
+                        <tr>
+                            <td id="trno"></td>
+                            <td><input type="date" id="trissuedate"></td>
+                            <td><input type="date" id="trexpretdate"></td>
+                        </tr>
+                        <tr>
+                            <th colspan="2">
+                                Transmitted to*
+                            </th>
+                            <th>
+                                Hero Engineering Contact
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <input type="text" id="trTo" style="width: 50%;" class="required">
+                            </td>
+                            <td>
+                                <input type="text" id="HeroContact" style="width: 50%;" class="required">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colspan="2">
+                                Issued Via*
+                            </th>
+                            <th>
+                                Transmittal Name*
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><input style="width: 50%;" type="text" id="issued_via" class="required">
+                            </td>
+                            <td><input type="text" style="width: 50%" id="trName" class="required"></td>
+                        </tr>
+                        <tr>
+                            <th colspan="3">
+                                Issued for*
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="text-align: center;">
+                                <input type="checkbox" id="tr_approval">
+                                <label for="tr_approval"><b>Approval</b></label>
+                                <input type="checkbox" id="tr_closeout">
+                                <label for="tr_closeout"><b>Close-out</b></label>
+                                <input type="checkbox" id="tr_construction">
+                                <label for="tr_construction"><b>Construction</b></label>
+                                <input type="checkbox" id="tr_information">
+                                <label for="tr_information"><b>Information</b></label>
+                                <input type="checkbox" id="tr_quotation">
+                                <label for="tr_quotation"><b>Quotation</b></label>
+                                <input type="checkbox" id="tr_tender">
+                                <label for="tr_tender"><b>Tender</b></label>
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <th colspan="3">Available Attached Deliverables * - (hold Ctrl to select multiple
+                                deliverables)</th>
+
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <input type='text' id='tr_searchdeltext' placeholder="Search Deliverable" size=55%>
+                            </td>
+                            <td>
+                                <div class='delcount'></div>
+                            </td>
+
+
+
+                        </tr>
+                        <tr>
+
+                            <td>
+                                <select size='10' multiple='multiple' style='width:360px' class='adddel'
+                                    id="tr_addeloption"></select>
+                            </td>
+                            <td>
+                                <button type='button' style='width:95px' id='tr_adddel'>Attach >></button>
+                                <br>
+                                <button type='button' style='width:95px' id='tr_remdel'>
+                                    << Remove</button>
+                            </td>
+                            <td>
+                                <select size='10' multiple='multiple' style='width:360px' class='remdel'
+                                    id="tr_remdeloption"></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colspan="3">Remarks</th>
+
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <textarea id="remarks" rows="2" style="width: 100%;">   </textarea>
+                            </td>
+                        </tr>
+
+                    </table>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-success" id="transmittal-modal-save">Save changes</button>
+                    <button class="button" id="transmittal-modal-viewPDF">Generate PDF...</button>
+                    <button class="button" id="transmittal-modal-cancel">Cancel</button>
+                </footer>
+            </div>
+        </div>
+
+        <div id="add-transmittal-modal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Add Transmittal</p>
+                    <button class="delete" aria-label="close" id="add-transmittal-modal-close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <table class="add-table">
+                        <tr>
+                            <th>
+                                Transmittal Number
+                            </th>
+                            <th>
+                                Issue Date*
+                            </th>
+                            <th>
+                                Expected Return*
+                            </th>
+                        </tr>
+                        <tr>
+                            <td id="addtrno"></td>
+                            <td><input type="date" id="addtrissuedate"></td>
+                            <td><input type="date" id="addtrexpretdate"></td>
+                        </tr>
+                        <tr>
+                            <th colspan="2">
+                                Transmitted to*
+                            </th>
+                            <th>
+                                Hero Engineering Contact
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <input type="text" id="addtrTo" style="width: 50%;" class="required">
+                            </td>
+                            <td>
+                                <input type="text" id="addHeroContact" style="width: 80%;" class="required">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colspan="2">
+                                Issued Via*
+                            </th>
+                            <th>
+                                Transmittal Name*
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="2"><input style="width: 50%;" type="text" id="addissued_via" class="required">
+                            </td>
+                            <td><input type="text" style="width: 80%" id="addtrName" class="required"></td>
+                        </tr>
+                        <tr>
+                            <th colspan="3">
+                                Issued for*
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="text-align: center;">
+                                <input type="checkbox" id="addtr_approval">
+                                <label for="tr_approval"><b>Approval</b></label>
+                                <input type="checkbox" id="addtr_closeout">
+                                <label for="tr_closeout"><b>Close-out</b></label>
+                                <input type="checkbox" id="addtr_construction">
+                                <label for="tr_construction"><b>Construction</b></label>
+                                <input type="checkbox" id="addtr_information">
+                                <label for="tr_information"><b>Information</b></label>
+                                <input type="checkbox" id="addtr_quotation">
+                                <label for="tr_quotation"><b>Quotation</b></label>
+                                <input type="checkbox" id="addtr_tender">
+                                <label for="tr_tender"><b>Tender</b></label>
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <th colspan="3">Available Attached Deliverables * - (hold Ctrl to select multiple
+                                deliverables)</th>
+
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <input type='text' id='addtr_searchdeltext' placeholder="Search Deliverable" size=55%>
+                            </td>
+                            <td>
+                                <div class='delcount'></div>
+                            </td>
+
+
+
+                        </tr>
+                        <tr>
+
+                            <td>
+                                <select size='10' multiple='multiple' style='width:360px' class='adddel'
+                                    id="addtr_addeloption"></select>
+                            </td>
+                            <td>
+                                <button type='button' style='width:95px' id='addtr_adddel'>Attach >></button>
+                                <br>
+                                <button type='button' style='width:95px' id='addtr_remdel'>
+                                    << Remove</button>
+                            </td>
+                            <td>
+                                <select size='10' multiple='multiple' style='width:360px' class='remdel'
+                                    id="addtr_remdeloption"></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colspan="3">Remarks</th>
+
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <textarea id="addremarks" rows="2" style="width: 100%;">   </textarea>
+                            </td>
+                        </tr>
+
+                    </table>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-success" id="addtransmittal-modal-save">Save changes</button>
+                    <button class="button" id="addtransmittal-modal-cancel">Cancel</button>
+                </footer>
+            </div>
+        </div>
+
+        <div id="return-transmittal-modal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">Return Transmittal</p>
+                    <button class="delete" aria-label="close" id="return-transmittal-modal-close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <table>
+                        <tr>
+                            <th>
+                                Transmittal Number
+                            </th>
+                            <th>
+                                Issue Date*
+                            </th>
+                            <th>
+                                Expected Return*
+                            </th>
+                        </tr>
+                        <tr>
+                            <td id="returntrno"></td>
+                            <td id="returntrissuedate"></td>
+                            <td id="returntrexpretdate"></td>
+                        </tr>
+                        <tr>
+                            <th colspan="2">
+                                Transmitted to*
+                            </th>
+                            <th>
+                                Hero Engineering Contact
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="2" id="returntrTo" style="width: 50%;">
+                            </td>
+                            <td id="returnHeroContact" style="width: 50%;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colspan="2">
+                                Issued Via*
+                            </th>
+                            <th>
+                                Transmittal Name*
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="width: 50%;" type="text" id="returnissued_via" >
+                            </td>
+                            <td style="width: 50%" id="returntrName"></td>
+                        </tr>
+                        <tr>
+                            <th colspan="3">
+                                Issued for*
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="text-align: center;">
+                                <input type="checkbox" id="returntr_approval">
+                                <label for="tr_approval"><b>Approval</b></label>
+                                <input type="checkbox" id="returntr_closeout">
+                                <label for="tr_closeout"><b>Close-out</b></label>
+                                <input type="checkbox" id="returntr_construction">
+                                <label for="tr_construction"><b>Construction</b></label>
+                                <input type="checkbox" id="returntr_information">
+                                <label for="tr_information"><b>Information</b></label>
+                                <input type="checkbox" id="returntr_quotation">
+                                <label for="tr_quotation"><b>Quotation</b></label>
+                                <input type="checkbox" id="returntr_tender">
+                                <label for="tr_tender"><b>Tender</b></label>
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <th colspan="3">Deliverables To Be Returned* - (hold Ctrl to select multiple deliverables)</th>                            </th>
+
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <input type='text' id='returntr_searchdeltext' placeholder="Search Deliverable" size=55%>
+                            </td>
+                            <td>
+                                <div class='delcount'></div>
+                            </td>
+
+
+
+                        </tr>
+                        <tr>
+
+                            <td>
+                                <select size='10' multiple='multiple' style='width:360px' class='adddel'
+                                    id="returntr_addeloption"></select>
+                            </td>
+                            <td>
+                                <button type='button' style='width:95px' id='returntr_adddel'>Return >></button>
+                                <br>
+                                <button type='button' style='width:95px' id='returntr_remdel'>
+                                    << Pending</button>
+                            </td>
+                            <td>
+                                <select size='10' multiple='multiple' style='width:360px' class='remdel'
+                                    id="returntr_remdeloption"></select>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <th colspan="3">
+                                Return Date
+                            </th>
+                        </tr>
+                        <tr>
+                            <td  colspan="3" style="text-align: center;">
+                            <input type="date" id="returntrdate" style="align-self: center;">
+                            </td>
+                        </tr>
+
+                    </table>
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-success" id="return-transmittal-modal-save">Save changes</button>
+                    
+                    <button class="button" id="return-transmittal-modal-cancel">Cancel</button>
+                </footer>
+            </div>
+        </div>
+
+       
+        <div id="pdf-modal" class="modal">
+            <div class="modal-background"></div>
+            <div class="modal-content">
+                <p class="image">
+                    <iframe id="pdf" src="" width="100%" height="1000px"></iframe>
+                </p>
+            </div>
+            <button class="modal-close is-large" id="pdf-close" aria-label="close"></button>
+        </div>
+</div>
+        <script>
+         
+
+            $(document).ready(function () {
+                
+                
+                // Get modal element
+                var modal = document.getElementById('add-deliverable-modal');
+                // Get button that opens the modal
+                var openModalButton = document.getElementById('open-modal-AddDel-button');
+                openModalButton.addEventListener('click', openModal);
+
+                var openModalButtonSupersede = document.getElementById('open-modal')
+                // Get button that closes the modal
+                var closeModalButton = document.getElementById('close-modal-button');
+                closeModalButton.addEventListener('click', closeModal);
+
+                var closeEditModalButton = document.getElementById('edit-modal-close');
+                closeEditModalButton.addEventListener('click', closeEditModal);
+
+                var editDelModalSaveButton = document.getElementById('edit-modal-save');
+                editDelModalSaveButton.addEventListener('click', editDelModalSave);
+
+                var editModalCancelButton = document.getElementById('edit-modal-cancel');
+                editModalCancelButton.addEventListener('click', closeEditModal);
+
+                var saveDeliverableButton = document.getElementById('save-button');
+                saveDeliverableButton.addEventListener('click', saveDeliverable);
+
+                var saveRevisionButton = document.getElementById('supersede-modal-save');
+                saveRevisionButton.addEventListener('click', saveRevision);
+
+                var closeSupersedeButton = document.getElementById('supersede-modal-close')
+                closeSupersedeButton.addEventListener("click", supersedeModalClose);
+
+                var cancelSupersedeButton = document.getElementById('supersede-modal-cancel')
+                cancelSupersedeButton.addEventListener("click", supersedeModalClose);
+
+                var saveReturnButton = document.getElementById('return-modal-save');
+                saveReturnButton.addEventListener('click', saveReturnDeliverable);
+
+                var cancelReturnModalButton = document.getElementById('return-modal-cancel');
+                cancelReturnModalButton.addEventListener('click', returnModalClose);
+
+                var closeReturndelModalButton = document.getElementById('return-modal-close');
+                closeReturndelModalButton.addEventListener('click', returnModalClose);
+
+                var closePDFViewerButton = document.getElementById('pdf-close');
+                closePDFViewerButton.addEventListener('click', closePDFViewer);
+               
+                var viewPDFTransmittal = document.getElementById('transmittal-modal-viewPDF');
+                viewPDFTransmittal.addEventListener('click', viewPDF);
+
+                var TransmittalCancelButton = document.getElementById('transmittal-modal-cancel');
+                TransmittalCancelButton.addEventListener('click', closeTransmittalModal);
+
+                var TransmittalCloseButton = document.getElementById('transmittal-modal-close');
+                TransmittalCloseButton.addEventListener('click', closeTransmittalModal);
+
+                var saveEditTransmittalButton = document.getElementById('transmittal-modal-save');
+                saveEditTransmittalButton.addEventListener('click', saveTransmittalModal);
+
+                var saveAddTransmittalModalButton = document.getElementById('addtransmittal-modal-save');
+                saveAddTransmittalModalButton.addEventListener('click', function () {
+                    saveAddTransmittal();
+                    resetCheckboxState();
+                });
+
+              
+                var cancelAddTransmittalModalButton = document.getElementById('addtransmittal-modal-cancel')
+                cancelAddTransmittalModalButton.addEventListener('click', closeAddTransmittal);
+
+                var cancelAddTransmittalModalButton = document.getElementById('add-transmittal-modal-close')
+                cancelAddTransmittalModalButton.addEventListener('click', closeAddTransmittal);            
+                               
+                var openAddTransmittalModalButton = document.getElementById('open-modal-AddTr-button');
+                openAddTransmittalModalButton.addEventListener('click', function() {
+                    openAddTransmittalModal(); // Call the function to open the modal
+                    setDefaultDatesAddTr(); // Call the function to set default dates
+                });
+
+                var returnTransmittalModalCloseButton = document.getElementById('return-transmittal-modal-close');
+                returnTransmittalModalCloseButton.addEventListener('click', returnTransmittalModalClose);
+
+                var cancelReturnTransmittalModalButton = document.getElementById('return-transmittal-modal-cancel');
+                cancelReturnTransmittalModalButton.addEventListener('click', returnTransmittalModalClose);
+
+                document.getElementById('addtrissuedate').addEventListener('change', updateExpectedReturnDateAddTr);
+                document.getElementById('trissuedate').addEventListener('change', updateExpectedReturnDateEditTr);
+                document.getElementById('returntrdate').addEventListener('change', updateExpectedReturnDateRetTr);
+
+                // Call the function to attach the click event to clickable rows
+                attachClickableRowEvent();
+                attachEventListener();
+                attachEventListenerPDF();
+
+                var saveReturnTransmittalModalButton =  document.getElementById('return-transmittal-modal-save');
+                saveReturnTransmittalModalButton.addEventListener('click', saveReturnTransmittalModal);
+
+                function saveReturnTransmittalModal(){
+                    var trno = document.getElementById('returntrno').innerText;
+             
+                    var trRetDate = document.getElementById('returntrdate').value;
+                    var returntrselect = document.getElementById('returntr_remdeloption');
+                    var pendingtrselect = document.getElementById('returntr_addeloption');
+                    var del = [];
+                    $("select#returntr_remdeloption option").each(function () {
+                            del.push($(this).val());
+                        });
+                    
+                    
+
+                    params = JSON.stringify({
+                        trno: trno,
+                        trRetDate: trRetDate,
+                        del: del
+
+                    });
+                    $.ajax({
+                        url: "/return-transmittal-save",
+                        method: "POST",
+                        contentType: 'application/json',
+                        data: params,
+                        success: function (data) {
+                            updateTrTable(data.transmittals);
+                            returnTransmittalModalClose();
+                            
+                            
+                            
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error saving the return transmittal:", error);
+                        }
+                    });
+
+                }
+
+                
+                                   
+                    function handleReturnTransmittalClick(event) {
+                        
+                    }
+                
+                
+
+                function closePDFViewer(){
+                    var modal = document.getElementById("pdf-modal");
+                    modal.classList.remove("is-active");
+                    attachClickableRowEvent();
+                }
+
+
+                function closeAddTransmittal(){
+                    var modal = document.getElementById("add-transmittal-modal");
+                    modal.classList.remove("is-active");
+                    var table = document.querySelector('.add-table'); // Assuming your table has the class "add-table"
+                    var inputFields = table.querySelectorAll('input, select, textarea'); // Adjust selector as needed
+                    inputFields.forEach(function(field) {
+                        field.value = ''; // Reset the value of each input field
+                    });
+                    attachClickableRowEvent();
+                    }
+
+                    function saveAddTransmittal() {
+                        var del = [];
+                        var trName = document.getElementById('addtrno').innerText;
+                        var trIssuedate = document.getElementById('addtrissuedate').value;
+                        var trexpretdate = document.getElementById('addtrexpretdate').value;
+                        console.log("The expected return date is: ",trexpretdate);
+                        var AddTrTo = document.getElementById('addtrTo').value;
+                        var trHeroContact = document.getElementById('addHeroContact').value;
+                        var trTrName = document.getElementById('addtrName').value;
+                        var trApproval = document.getElementById('addtr_approval').checked ? 1 : 0;
+                        var trCloseOut = document.getElementById('addtr_closeout').checked ? 1 : 0;
+                        var trConstructon = document.getElementById('addtr_construction').checked ? 1 : 0;
+                        var trInformation = document.getElementById('addtr_information').checked ? 1 : 0;
+                        var trQuotation = document.getElementById('addtr_quotation').checked ? 1 : 0;
+                        var trTender = document.getElementById('addtr_tender').checked ? 1 : 0;
+                        var trRemarks = document.getElementById('addremarks').value;
+                        var trissuedVia = document.getElementById('addissued_via').value;
+                    
+                        $("select#addtr_remdeloption option").each(function() {
+                            del.push($(this).val()); 
+                        });
+                                            
+                        // Validation for required fields
+                        if (
+                            trIssuedate.trim() === '' ||
+                            trexpretdate.trim() === '' ||
+                            AddTrTo.trim() === '' ||
+                            trTrName.trim() === '' ||
+                            trHeroContact.trim() === '' ||
+                            
+                            del.length === 0
+                        ) {
+                            alert("Please fill all required fields and add the corresponding deliverables");
+                            return;
+                        }
+                    
+                        params = JSON.stringify({
+                            docno: trName,
+                            issuedate: trIssuedate,
+                            returndate: trexpretdate,
+                            transmitto: AddTrTo,
+                            herocontact: trHeroContact,
+                            docname: trTrName,
+                            issuedvia: trissuedVia,
+                            approval: trApproval,
+                            closeout: trCloseOut,
+                            construction: trConstructon,
+                            information: trInformation,
+                            quotation: trQuotation,
+                            tender: trTender,
+                            remarks: trRemarks,
+                            del: del
+                        });
+                    
+                        $.ajax({
+                            url: "/add-transmittal",
+                            method: "POST",
+                            contentType: 'application/json',
+                            data: params,
+                            success: function(data) {
+                                console.log(data.transmittals);
+                                updateTrTable(data.transmittals);
+                                addRowsToTable(data.deliverables);
+                                closeAddTransmittal();
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("Error Adding New Transmittal:", error);
+                            }
+                        });
+                    }
+                    
+
+                function resetCheckboxState() {
+                        document.getElementById('addtr_approval').checked = false;
+                        document.getElementById('addtr_closeout').checked = false;
+                        document.getElementById('addtr_construction').checked = false;
+                        document.getElementById('addtr_information').checked = false;
+                        document.getElementById('addtr_quotation').checked = false;
+                        document.getElementById('addtr_tender').checked = false;
+                    }
+
+                function updateExpectedReturnDateRetTr() {
+                    var returntrdate = new Date(document.getElementById('returntrdate').value);
+                    var returntrdate = returntrdate.toISOString().split("T")[0];
+                    document.getElementById("returntrdate").value = returntrdate;
+                }
+
+               
+
+
+                function updateExpectedReturnDateAddTr() {
+                    var issuedDate = new Date(document.getElementById('addtrissuedate').value);
+                    var expectRetDate = moment(issuedDate).add(7, "days").format("YYYY-MM-DD");
+                    document.getElementById("addtrexpretdate").value = expectRetDate;
+                }
+                
+                // Function to set today's date as the issued date and calculate the expected return date
+                function setDefaultDatesAddTr() {
+                    var today = new Date();
+                    var issuedDate = today.toISOString().split("T")[0];
+                    document.getElementById("addtrissuedate").value = issuedDate;
+                    updateExpectedReturnDateAddTr(); // Calculate and set the expected return date
+                }
+
+                function updateExpectedReturnDateEditTr() {
+                    var issuedDate = new Date(document.getElementById('trissuedate').value);
+                    var expectRetDate = moment(issuedDate).add(7, "days").format("YYYY-MM-DD");
+                    document.getElementById("trexpretdate").value = expectRetDate;
+                }
+                
+                // Function to set today's date as the issued date and calculate the expected return date
+                function setDefaultDatesEditTr() {
+                    var today = new Date();
+                    var issuedDate = today.toISOString().split("T")[0];
+                    document.getElementById("trissuedate").value = issuedDate;
+                    updateExpectedReturnDateEditTr(); // Calculate and set the expected return date
+                }
+                
+                
+
+                function saveTransmittalModal() {
+                    if (!emptyRequired()) {
+                        console.log("BREAKPOINT1!!")
+                     
+                        var expectRetDate = moment(document.getElementById('trissuedate').value, "YYYY-MM-DD").add(7, "days").format("YYYY-MM-DD");
+                        document.getElementById('trexpretdate').value = expectRetDate;
+
+                                         
+                        var select = document.getElementById("tr_remdeloption");
+                        var options = select.querySelectorAll("option");
+                        var del = [];
+                        options.forEach(function(option) {
+                            del.push(option.value);
+                        });
+
+                        console.log("The deliverables are:" , del);
+                
+                        var params = {
+                            docno: document.getElementById("trno").innerText,
+                            docname: document.getElementById("trName").value,
+                            issuedate: document.getElementById("trissuedate").value,
+                            returndate: document.getElementById("trexpretdate").value,
+                            transmitto: document.getElementById("trTo").value,
+                            herocontact: document.getElementById("HeroContact").value,
+                            issuedvia: document.getElementById("issued_via").value,
+                            approval: document.getElementById("tr_approval").checked? 1 : 0,
+                            closeout: document.getElementById("tr_closeout").checked? 1 : 0,
+                            construction: document.getElementById("tr_construction").checked? 1 : 0,
+                            information: document.getElementById("tr_information").checked? 1 : 0,
+                            quotation: document.getElementById("tr_quotation").checked? 1 : 0,
+                            tender: document.getElementById("tr_tender").checked? 1 : 0,
+                            del: del,
+                            remarks: document.getElementById("remarks").value,
+                            save: 1
+                        };
+                        console.log(params);
+                      
+                
+                        $.ajax({
+                            url: "/update-transmittal",
+                            method: "POST",
+                            contentType: 'application/json',
+                            data: JSON.stringify(params),
+                            success: function (data) {
+                             
+                                updateTrTable(data.transmittals);
+                                addRowsToTable(data.deliverables);
+                                closeTransmittalModal();
+                                
+                            },
+                            error: function (xhr, status, error) {
+                                console.error("Error fetching dropdown options:", error);
+                            }
+                        });
+                    }
+                }
+                
+
+                function attachClickableRowEvent() {
+                    var clickableRows = document.getElementsByClassName('clickable-row');
+                    for (var i = 0; i < clickableRows.length; i++) {
+                        clickableRows[i].addEventListener('click', handleRowClick);
+                    }
+                }
+
+
+
+               
+
+                function handleRowClick() {
+                    $(this).toggleClass("flash");
+
+
+                    // Remove the flash class after 0.5 seconds (half the duration of the animation)
+                    setTimeout(function () {
+                        $(".flash").removeClass("flash");
+                    }, 500);
+
+                    $(this).toggleClass("active");
+
+                    // Toggle the visibility of the next .subrow element based on the active state
+                    var subrow = $(this).next(".subrow");
+                    if ($(this).hasClass("active")) {
+                        subrow.show().addClass("active");
+                    } else {
+                        subrow.hide().removeClass("active");
+                    }
+
+                    // Remove the active class for other rows
+                    $(".clickable-row").not(this).removeClass("active").next(".subrow").hide().removeClass("active");
+                }
+
+
+                //close edit-modal
+                function closeEditModal(deliverables) {
+                    
+                   
+                    var modal = document.getElementById("edit-modal");
+                    modal.classList.remove("is-active");
+                    
+                    
+                    
+
+                }
+
+                function openAddTransmittalModal(){
+                    var modal = document.getElementById("add-transmittal-modal");
+                    modal.classList.add("is-active");
+                    const AddDelselectTr = document.getElementById('addtr_addeloption');
+                    AddDelselectTr.innerHTML = '';
+                    const remDelselectTr = document.getElementById('addtr_remdeloption');
+                    remDelselectTr.innerHTML = '';
+                    const searchInput = document.getElementById('addtr_searchdeltext');
+                    var lastTr = getLastTrNumber();
+                    document.getElementById('addtrno').innerText = lastTr;
+                    params = JSON.stringify({
+
+
+                    });
+                    $.ajax({
+                        url: "/new-transmittal-details",
+                        method: "POST",
+                        contentType: 'application/json',
+                        data: params,
+                        success: function (data) {
+                          console.log("The data is: ",data);
+                          //document.getElementById('addtrTo').value = data.tsDetailsCName[0].clientname.length !== 0 && data.tsDetailsCName[0].clientname !== null && data.tsDetailsCName[0].clientname !== undefined?data.tsDetailsCName[0].clientname:'' ;
+                          
+                          Array.isArray(data.tsDetailsCName) && data.tsDetailsCName.length > 0?document.getElementById('addtrTo').value = data.tsDetailsCName[0].clientname: document.getElementById('addtrTo').value = "<Hero Client Name>-";
+                          data.addel.forEach(item => {
+                            const optionAddDel = document.createElement('option');
+                            optionAddDel.value = item.docno + "|" + item.revid;
+                            optionAddDel.textContent = item.desc;
+                            AddDelselectTr.appendChild(optionAddDel);
+                        });
+                        searchInput.addEventListener('input', () => {
+                            filterOptions(AddDelselectTr, searchInput.value.toLowerCase());
+                        });
+                        delcountAddtr();
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error fetching dropdown options:", error);
+                        }
+                    });
+                }
+
+                function getLastTrNumber() {
+                    const trNumberCells = document.querySelectorAll("#trtable #transmittal_number"); // Get all cells with ID "transmittal_number" inside the table with ID "trtable"
+                    console.log("The tr number cells are: ", trNumberCells);
+                    let lastTrNumber = 0;
+                    trNumberCells.forEach(cell => {
+                        const trNumberText = cell.textContent.trim();
+                        console.log("The text content of the cell is: ", trNumberText);
+                        const trNumberMatch = trNumberText.match(/TR-(\d+)/);
+                        console.log("The matched TR number is: ", trNumberMatch);
+                        if (trNumberMatch && trNumberMatch[1]) {
+                            const trNumber = parseInt(trNumberMatch[1]);
+                            console.log("The parsed TR number is: ", trNumber);
+                            if (!isNaN(trNumber) && trNumber > lastTrNumber) {
+                                lastTrNumber = trNumber;
+                            }
+                        }
+                    });
+                
+                    const nextTrNumber = lastTrNumber + 1;
+                    console.log("The next TR number is: ", nextTrNumber);
+                    return "TR-" + nextTrNumber.toString().padStart(4, "0");
+                }
+                
+                
+                
+                
+                
+
+
+                
+
+                function viewPDF() {
+                            var table = document.getElementById('trtable');
+                            var rows = table.getElementsByClassName('clickable-row active');
+                            
+                            // Initialize trno outside the loop
+                            var trno;
+                
+                            // Loop through rows to get the trno value
+                            for (var i = 0; i < rows.length; i++) {
+                                trno = rows[i].dataset.trno;
+                            }
+                            console.log("The transmittal number is: ", trno);
+                            var params = JSON.stringify({
+                                docno: trno,
+                                projdb: '<%- JSON.stringify(projdb) %>'
+                            });
+                
+                            $.ajax({
+                                url: "/view-pdf",
+                                method: "POST",
+                                data: params,
+                                contentType: 'application/json',
+                                xhrFields: {
+                                    responseType: 'blob' // Set the response type to blob
+                                },
+                                success: function(response, status, xhr) {
+                                    // Create a blob URL from the response
+                                    var blob = new Blob([response], { type: 'application/pdf' });
+                                    var url = window.URL.createObjectURL(blob);
+
+
+                                    var modal = document.getElementById('pdf-modal');
+                                    modal.classList.add('is-active');
+
+                                    var iframe = document.getElementById('pdf');
+                                    iframe.src = url;
+                                    },
+                                error: function(xhr, status, error) {
+                                    console.error("Error:", error);
+                                }
+                            });
+                
+                        }
+                    
+                
+
+               
+                function emptyRequiredAddTr() {
+                    const trName = document.getElementById('addtrno').innerText;
+                    const trIssuedate = document.getElementById('addtrissuedate').value;
+                    const trexpretdate = document.getElementById('addtrexpretdate').value;
+                    const AddTrTo = document.getElementById('addtrTo').value;
+                    const trHeroContact =  document.getElementById('addHeroContact').value;
+                    const trTrName = document.getElementById('addtrName').value;
+                    const trApproval =  document.getElementById('addtr_approval').checked?1:0;
+                    const trCloseOut = document.getElementById('addtr_closeout').checked?1:0;
+                    const trConstructon =  document.getElementById('addtr_construction').checked?1:0;
+                    const trInformation = document.getElementById('addtr_information').checked?1:0;
+                    const trQuotation =  document.getElementById('addtr_quotation').checked?1:0;
+                    const trTender = document.getElementById('addtr_tender').checked?1:0;
+                    const trRemarks =  document.getElementById('addremarks').value;
+                  
+                    if (!trName || !trIssuedate || !trexpretdate || !AddTrTo || !trHeroContact || !trTrName || !trRemarks) {
+                      return true;
+                    }
+                  
+                    
+                  
+                    return false;
+                  }
+
+                function emptyRequired() {
+                    if (!$("input.required").val() || !$("input#trissuedate").val()) {
+                        alert("Please complete all required fields before saving.");
+                        return 1;
+                    }
+                    else
+                        return 0;
+                }
+
+                // Check required fields for text
+                
+
+                document.getElementById("returndate").valueAsDate = new Date();
+
+                $(".sidebar-toggle").click(function () {
+                    $(".sidebar").toggleClass("open");
+                    $("body").toggleClass("shifted");
+                });
+
+                function updateTrTable(transmittals) {
+                    var tableBody = $('#trtable tbody');
+                    tableBody.empty(); // Clear existing table rows
+                    
+                    // Iterate over each transmittal and generate HTML for each row
+                    transmittals.forEach(function(transmittal) {
+                        var rowClass = '';
+                        if (transmittal.complete) {
+                            rowClass += ' completed';
+                        }
+                        if (transmittal.cancelled) {
+                            rowClass += ' cancelled';
+                        }
+                        if (transmittal.overdue) {
+                            rowClass += ' overdue';
+                        }
+                        if (!transmittal.complete && !transmittal.cancelled) {
+                            rowClass += ' pending';
+                        }
+                
+                        // Generate HTML for main row
+                        var row = `<tr class="clickable-row${rowClass}" 
+                                   data-trno="${transmittal.trno}" 
+                                   data-trname="${transmittal.trname}" 
+                                   data-complete="${transmittal.complete}" 
+                                   data-cancelled="${transmittal.cancelled}" 
+                                   data-issuedate="${transmittal.issuedate}" 
+                                   data-expretdate="${transmittal.expretdate}" 
+                                   data-transmitto="${transmittal.transmitto}" 
+                                   data-herocontact="${transmittal.herocontact}" 
+                                   data-issuedvia="${transmittal.issuedvia}" 
+                                   data-approval="${transmittal.approval}" 
+                                   data-closeout="${transmittal.closeout}" 
+                                   data-construction="${transmittal.construction}" 
+                                   data-information="${transmittal.information}" 
+                                   data-quotation="${transmittal.quotation}" 
+                                   data-tender="${transmittal.tender}" 
+                                   data-remarks="${transmittal.remarks}" 
+                                   data-transmitted_documents="${transmittal.transmitted_documents}" 
+                                   data-docno="${transmittal.docno}" 
+                                   data-docname="${transmittal.docname}" 
+                                   data-rev="${transmittal.rev}" 
+                                   data-desc="${transmittal.desc}">
+                                      <td id="transmittal_number">${transmittal.trno}</td>
+                                      <td id="transmittal_name">${transmittal.trname}</td>
+                                      <td id="transmittal_issuedate">${transmittal.issuedate === '0000-00-00' ? '-' : transmittal.issuedate}</td>
+                                      <td id="transmittal_expretdate">${transmittal.expretdate === '0000-00-00' ? '-' : transmittal.expretdate}</td>
+                                      <td>${transmittal.complete ? '<img src="images/icon_tick.png">' : '<img src="images/icon_cross.png">'}</td>
+                                  </tr>`;
+                
+                        // Generate HTML for subrow
+                        var subRow = `<tr class="subrow">
+                            <td>
+                                <div style="display: inline-block; padding-right: 5px;">
+                                    <button id="view-pdf-button" class="btn">View PDF...</button>
+                                    ${(!transmittal.complete && !transmittal.cancelled) ? '<button class="btn" id="edit-transmittal">Edit Transmittal...</button>' : ''}
+                                </div>
+                                <div class="transmitted-doc-container">
+                                    <table class="transmitted_doc">
+                                        <tbody>
+                                            <p><u>${transmittal.transmitted_documents.length > 0 ? transmittal.transmitted_documents.length + ' ' + 'transmitted documents' : ''} </u></p>
+                                            ${transmittal.transmitted_documents.map(transmitted_doc => `<tr><td class="returned-deliverables">${transmitted_doc.trim()}</td></tr>`).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>
+                                ${(!(transmittal.complete) &&!(transmittal.cancelled))? '<div style="display: inline-block; padding-right: 5px;"><button class="btn" id="return-transmittal">Return...</button></div>' : "Transmittal return date: " + transmittal.returndate}
+                            </td>
+                        </tr>`;
+                        
+                        // Append main row and subrow to table body
+                        tableBody.append(row);
+                        tableBody.append(subRow);
+                    });
+                
+                    // Re-attach event handlers to new rows
+                    attachClickableRowEvent();
+                    attachEventListener();
+                    
+
+                }
+                
+                
+                
+
+
+
+                function addRowsToTable(deliverables) {
+                    // Sort the deliverables array by docno
+                    
+                
+                    // Clear the table body before adding rows
+                    $('#deltable tbody').empty();
+                    console.log("The deliverables are: ",deliverables);
+                    
+                    // Loop through each deliverable to create table rows
+                    deliverables.forEach(function (deliverable) {
+                        var safety = deliverable.safety;
+                        var schedate_formatted = new Date(deliverable.schedate);
+                        var schedate_year = schedate_formatted.getUTCFullYear();
+                        var rowClass = '';
+                        
+                        // Add classes based on deliverable status
+                        if (deliverable.complete) {
+                            rowClass += ' completed';
+                        }
+                        if (deliverable.cancelled) {
+                            rowClass += ' cancelled';
+                        }
+                        if (deliverable.overdue) {
+                            rowClass += ' overdue';
+                        }
+                        if (!deliverable.complete && !deliverable.cancelled) {
+                            rowClass += ' pending';
+                        }
+                
+                        // Construct table row HTML
+                        var row = `<tr class="clickable-row${rowClass}">
+                                        <td class="docno">${deliverable.docno}</td>
+                                        <td class="sheets">${deliverable.sheets}</td>
+                                        <td>${deliverable.safety === 1 ? "FS" : ""}</td>
+                                        <td class="docname">${deliverable.docname}</td>
+                                        <td class="revdesc">${typeof deliverable.rev === 'undefined' || deliverable.rev === null ? '' : deliverable.rev[0] + (deliverable.subrev !== null && deliverable.subrev !== '' ? "." + deliverable.subrev : ' ') + '-' + deliverable.rev[1]}</td>
+                                        <td class="rev">${deliverable.revdate}</td>
+                                        <td class="clientno">${deliverable.clientno === null ? " " : deliverable.clientno}</td>
+                                    </tr>
+                                    <tr class="subrow" style="display: none;">
+                                        <td colspan="3"></td>
+                                        <td>
+                                            <div style="display: inline-block; padding-right: 5px;">
+                                                <button class="btn is-small is-success is-outlined edit-button"
+                                                    data-doc-no="${deliverable.docno}"
+                                                    data-doc-name="${deliverable.docname}"
+                                                    data-revision=":${typeof deliverable.rev === 'undefined' || deliverable.rev === null ? '' : deliverable.rev[0] + (deliverable.subrev !== null && deliverable.subrev !== '' ? "." + deliverable.subrev : ' ') + '-' + deliverable.rev[1]}"
+                                                    data-sheets="${deliverable.sheets}"
+                                                    data-revision-date="${deliverable.revdate}"
+                                                    data-client-no="${deliverable.clientno}"
+                                                    data-safety="${deliverable.safety}">Edit Document...</button>
+                                                    ${deliverable.issuedate !== '0000-00-00' && deliverable.expretdate !== '0000-00-00' && deliverable.returndate === '0000-00-00' ?
+                                            `<button class="btn is-small is-success is-outlined" id="return-button">Return Document...</button>` : ''}
+                                            ${deliverable.issuedate !== '0000-00-00' ? `<div style='display: inline-block; padding-right: 2px;'>- Issued Date: ${deliverable.issuedate}</div>` :
+                                            (deliverable.schedate !== '0000-00-00' && schedate_year > 1970) ?
+                                                `<div style='display: inline-block; padding-right: 2px;'>- Scheduled Issue: ${deliverable.schedate}</div>` : ''}
+                                            ${deliverable.returndate !== '0000-00-00' ? `<div style='display: inline-block; padding-right: 2px;'>- Returned Date: ${deliverable.returndate}</div>` :
+                                            deliverable.expretdate !== '0000-00-00' ?
+                                                `<div style='display: inline-block; padding-right: 2px;'>- Expected Return: ${deliverable.expretdate}</div>` : ''}
+                                            </div>
+                
+                                        </td>
+                                        <td>
+                                            ${!(deliverable.issuedate !== '0000-00-00' ^ deliverable.returndate !== '0000-00-00') ?
+                                                `<button class="btn is-small is-success is-outlined supersede-button"
+                                                data-doc-no="${deliverable.docno}"
+                                                data-doc-name="${deliverable.docname}"
+                                                data-sheets="${deliverable.sheets}"
+                                                data-revision="${typeof deliverable.rev === 'undefined' || deliverable.rev === null ? '' : deliverable.rev[0] + (deliverable.subrev !== null ? "." + deliverable.subrev : ' ') + '-' + deliverable.rev[1]}"
+                                                data-revision-date="${deliverable.revdate}"
+                                                data-client-no="${deliverable.clientno}">Supersede Document</button>` : ''}
+                                        </td>
+                                        <td>
+                
+                                        </td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>`;
+                
+                        // Append the row to the table body
+                        $('#deltable tbody').append(row);
+                    });
+                
+                    // Attach event handlers to clickable rows
+                    attachClickableRowEvent();
+                    
+                }
+                
+
+
+
+
+
+
+
+
+
+                $(document).on('click', '#return-button', function () {
+                    var docno = $(this).data("doc-no");
+
+                    const AddDelselect = document.getElementById('addeloption');
+                    const remDelselect = document.getElementById('remdeloption');
+                    AddDelselect.innerHTML = '';
+                    remDelselect.innerHTML = '';
+                    returnDeliverables(docno);
+
+                });
+
+                $(document).on('click', 'button#adddel', function () {
+                    // Clone the selected options and append them to the target select
+                    $("select#addeloption :selected").clone().appendTo("select.remdel");
+                
+                    // Remove any options with value "null|null" from the target select
+                    $("select#remdeloption option[value='null|null']").remove();
+                
+                    // Sort the options in the target select
+                    const remDelSelect = $("select#remdeloption");
+                    let options = remDelSelect.children("option").toArray();
+                    options.sort((a, b) => a.textContent.localeCompare(b.textContent));
+                    remDelSelect.empty().append(options);
+                
+                    // Remove the selected options from the source select
+                    $("select#addeloption :selected").detach();
+                    // Update any relevant counts or UI elements
+                    delcount();
+                });
+                
+
+                $(document).on('click', 'button#tr_adddel', function () {
+                    // Clone the selected options and append them to the target select
+                    $("select#tr_addeloption :selected").clone().appendTo("select#tr_remdeloption");
+                  
+                    // Remove any null options from the target select
+                    $("select#tr_remdeloption option[value='null|null']").remove();
+                  
+                    // Sort the options in the target select
+                    const remDelSelect = $("select#tr_remdeloption");
+                    let options = remDelSelect.children("option").toArray();
+                  
+                    // Sort the options
+                    if (options.length > 0) {
+                        options.sort((a, b) => a.textContent.localeCompare(b.textContent));
+                        remDelSelect.empty().append(options);
+                    }
+                  
+                    // Remove the selected options from the source select
+                    $("select#tr_addeloption :selected").detach();
+                    // Update any relevant counts or UI elements
+                    delcounttr();
+                });
+                
+
+                $(document).on('click', 'button#addtr_adddel', function () {
+                    // Clone the selected options and append them to the target select
+                    $("select#addtr_addeloption :selected").clone().appendTo("select#addtr_remdeloption");
+                
+                    // Remove any options with value "null|null" from the target select
+                    $("select#addtr_remdeloption option[value='null|null']").remove();
+                
+                    // Sort the options in the target select
+                    const remDelSelect = $("select#addtr_remdeloption");
+                    let options = remDelSelect.children("option").toArray();
+                    options.sort((a, b) => a.textContent.localeCompare(b.textContent));
+                    remDelSelect.empty().append(options);
+                
+                    // Remove the selected options from the source select
+                    $("select#addtr_addeloption :selected").detach();
+                    // Update any relevant counts or UI elements
+                    delcountAddtr();
+                });
+                
+
+                $(document).on('click', 'button#returntr_adddel', function () {
+                    // Clone the selected options and append them to the target select
+                    $("select#returntr_addeloption :selected").clone().appendTo("select#returntr_remdeloption");
+                
+                    // Remove any options with value "null|null" from the target select
+                    $("select#returntr_remdeloption option[value='null|null']").remove();
+                
+                    // Sort the options in the target select
+                    const remDelSelect = $("select#returntr_remdeloption");
+                    let options = remDelSelect.children("option").toArray();
+                    options.sort((a, b) => a.textContent.localeCompare(b.textContent));
+                    remDelSelect.empty().append(options);
+                
+                    // Remove the selected options from the source select
+                    $("select#returntr_addeloption :selected").detach();
+                    // Update any relevant counts or UI elements
+                    delcountRettr();
+                });
+                
+
+
+                $(document).on('click', 'button#remdel', function () {
+                    // Remove any options with value "null|null" from the target select
+                    $("select#adddeloption option[value='null|null']").remove();
+                
+                    // Clone the selected options and append them to the target select
+                    $("select#remdeloption :selected").clone().appendTo("select.adddel");
+                
+                    const addDelSelect = $("select#adddeloption");
+                    const options = addDelSelect.children("option").toArray();
+                    options.sort((a, b) => a.textContent.localeCompare(b.textContent));
+                    addDelSelect.empty().append(options);
+                
+                    // Remove the selected options from the source select
+                    $("select#remdeloption :selected").detach();
+                
+                    // Update any relevant counts or UI elements
+                    delcount();
+                });
+                
+                $(document).on('click', 'button#tr_remdel', function () {
+                    // Remove any options with value "null|null" from the target select
+                    $("select#tr_addeloption option[value='null|null']").remove();
+                
+                    // Clone the selected options and append them to the target select
+                    $("select#tr_remdeloption :selected").clone().appendTo("select#tr_addeloption");
+                
+                    const addDelSelect = $("select#tr_adddeloption");
+                    const options = addDelSelect.children("option").toArray();
+                    options.sort((a, b) => a.textContent.localeCompare(b.textContent));
+                    addDelSelect.empty().append(options);
+                
+                    // Remove the selected options from the source select
+                    $("select#tr_remdeloption :selected").detach();
+                
+                    // Update any relevant counts or UI elements
+                    delcounttr();
+                });
+                
+                $(document).on('click', 'button#addtr_remdel', function () {
+                    // Remove any options with value "null|null" from the target select
+                    $("select#addtr_addeloption option[value='null|null']").remove();
+                
+                    // Clone the selected options and append them to the target select
+                    $("select#addtr_remdeloption :selected").clone().appendTo("select#addtr_addeloption");
+                
+                    const addDelSelect = $("select#addtr_adddeloption");
+                    const options = addDelSelect.children("option").toArray();
+                    options.sort((a, b) => a.textContent.localeCompare(b.textContent));
+                    addDelSelect.empty().append(options);
+                
+                    // Remove the selected options from the source select
+                    $("select#addtr_remdeloption :selected").detach();
+                
+                    // Update any relevant counts or UI elements
+                    delcountAddtr();
+                });
+                
+                $(document).on('click', 'button#returntr_remdel', function () {
+                    // Remove any options with value "null|null" from the target select
+                    $("select#returntr_addeloption option[value='null|null']").remove();
+                
+                    // Clone the selected options and append them to the target select
+                    $("select#returntr_remdeloption :selected").clone().appendTo("select#returntr_addeloption");
+                
+                    const addDelSelect = $("select#returntr_adddeloption");
+                    const options = addDelSelect.children("option").toArray();
+                    options.sort((a, b) => a.textContent.localeCompare(b.textContent));
+                    addDelSelect.empty().append(options);
+                
+                    // Remove the selected options from the source select
+                    $("select#returntr_remdeloption :selected").detach();
+                
+                    // Update any relevant counts or UI elements
+                    delcountRettr();
+                });
+                
+
+
+               
+
+
+
+
+                // Function to open the modal
+                function openModal() {
+                    modal.classList.add('is-active');
+
+
+                    $("doctype").empty();
+                    $("#tdrwtype, #tskmtype").hide();
+                    updateDropdownOptions();
+                    DRWtoggleInitializeRow();
+                    SKMtoggleInitializeRow();
+                }
+
+                function closeModal() {
+                    modal.classList.remove('is-active');
+                    // Clear text inputs
+                    $("#docname, #docno2, #clientno").val('');
+                    $("#docno").text(''); // Clear the text content of #docno
+
+                    // Clear other inputs
+                    $("#alloc").val(1);
+
+                    $("#sheets").val(1);
+
+                    // Clear checkbox
+                    $("#safety").prop("checked", false);
+
+                    // Clear table
+                    $('#myTable tbody').html("");
+
+                    // Do not clear select dropdowns
+                    // Leave the values of #drwtype, #blocktype, #skmtype, #doctype as they are
+
+                    attachClickableRowEvent();
+                }
+                
+
+
+
+
+
+                //Function to Execute the Return operation:
+                function saveReturnDeliverable() {
+                    var projdb = JSON.parse('<%- JSON.stringify(projdb) %>');
+
+                    // Format the returned date to the ISO YYYY-MM-DD Standard
+                    var revisionDate = new Date($("#returndate").val());
+
+                    // Obtain the returned deliverables from the remdelOption Select element.
+                    const remdeloption = document.getElementById('remdeloption');
+                    const options = remdeloption.querySelectorAll('option');
+
+                    // Map each option's value to an array of objects
+                    const remdel = Array.from(options).map(option => {
+                        const [docno, revid, issuedate] = option.value.split('|');
+                        let formattedReturnDate = null; // Initialize formattedReturnDate
+
+                        // Check if revisionDate is valid
+                        if (isNaN(revisionDate)) {
+                            revisionDate = new Date(issuedate);
+                            revisionDate.setDate(revisionDate.getDate() + 7);
+                            formattedReturnDate = revisionDate.toISOString().split('T')[0];
+                        } else if (revisionDate < new Date(issuedate)) {
+                            alert("The Return Date has been changed to 7 days after the Issue Date.");
+                            revisionDate = new Date(issuedate);
+                            revisionDate.setDate(revisionDate.getDate() + 7);
+                            formattedReturnDate = revisionDate.toISOString().split('T')[0];
+                        } else {
+                            formattedReturnDate = revisionDate.toISOString().split('T')[0];
+                        }
+
+                        params = JSON.stringify({ docno, revid: parseInt(revid), formattedDate: formattedReturnDate });
+                        $.ajax({
+                            url: "/return-deliverables",
+                            method: "POST",
+                            contentType: 'application/json',
+                            data: params,
+                            success: function (data) {
+                                //Update Front End with the New Revision
+                                addRowsToTable(data.deliverables);
+                                attachClickableRowEvent();
+                                attachEventListenerPDF();
+                                closeReturndelModal();
+
+                            },
+                            error: function (xhr, status, error) {
+                                console.error("Error fetching dropdown options:", error);
+                            }
+                        });
+                    });
+                }
+
+
+
+
+
+
+
+
+                // Function to Execute the Revision change
+                function saveRevision() {
+
+
+                    var projdb = '<%- JSON.stringify(projdb) %>';
+                    var selectedRevision = document.getElementById('revision-dropdown').value;
+                    var docno = document.getElementById('docno').value;
+                    // Format revisionDate as YYYY-MM-DD
+                    var revisionDateInput = document.getElementById('revdate').value;
+                    var revisionDate = new Date(revisionDateInput);
+                    var formattedRevisionDate = revisionDate.toISOString().split('T')[0];
+                    var subrevRevision = ($("input#subrev").val() === " " || $("input#subrev").val() === null) ? " " : $("input#subrev").val();
+                    console.log("The revision date is: ", formattedRevisionDate);
+                    // Format schedate as YYYY-MM-DD
+                    var schedateInput = document .getElementById('schedate').value;
+                    var schedate = schedateInput ? new Date(schedateInput) : null;
+                    var formattedSchedate = schedate ? schedate.toISOString().split('T')[0] : ' ';
+
+                    var selectedOption = $("#revision-dropdown option:selected");
+                    var revid = selectedOption.data("revid");
+                    var rev = selectedOption.data("rev");
+                    var revdesc = rev + "-" + selectedOption.data("revdesc");
+
+                    params = JSON.stringify({
+                        projdb: projdb,
+                        docno: docno,
+                        revdate: formattedRevisionDate,
+                        rev: rev,
+                        revid: revid,
+                        schedate: formattedSchedate,
+                        subrev: subrevRevision,
+                        revdesc: revdesc
+                    });
+                    $.ajax({
+                        url: "/supersede",
+                        method: "POST",
+                        contentType: 'application/json',
+                        data: params,
+                        timeout:15000,
+                        success: function (data) {
+                            //Update Front End with the New Revision
+                            addRowsToTable(data.deliverables);
+                            //update click event for clickable rows
+                            attachClickableRowEvent();
+                            // Close the modal
+                            supersedeModalClose();
+
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error Supersede:", error);
+                        }
+                    });
+                }
+
+                function saveDeliverable() {
+                    var projdb = '<%- JSON.stringify(projdb) %>';
+                    var docno = document.getElementById('docno').innerText;
+                    var docname = document.getElementById('docname').value;
+                    var clientno = document.getElementById('clientno').value;
+                    var alloc = document.getElementById('alloc').value;
+                    var sheets =  document.getElementById('sheets').value;
+                    var safety = document.getElementById('safety').checked;
+                    var safetyValue = safety?1:0;
+                                      
+                    
+                    if (!docname || docname === " ") {
+                        alert("Please enter a document name! ");
+                        return;
+                    }
+
+                    params = JSON.stringify(
+                        {
+                            projdb: projdb,
+                            docno: docno,
+                            sheets: sheets,
+                            docname: docname,
+                            clientno: clientno,
+                            alloc: alloc,
+                            safety: safetyValue,
+                            save: 1
+                        })
+                    $.ajax({
+                        url: "/save-new-deliverable",
+                        method: "POST",
+                        contentType: 'application/json',
+                        data: params,
+                        success: function (data) {
+                            addRowsToTable(data.deliverables);
+                            attachClickableRowEvent();
+                            
+                            closeModal();
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error fetching dropdown options:", error);
+                        }
+                    });
+                }
+
+                function updateDropdownOptions() {
+                    var isChecked = $("#safety").is(":checked");
+                    var safetyValue = isChecked ? 1 : 0;
+                
+                    // Make an AJAX request to fetch updated dropdown options based on safetyValue
+                    $.ajax({
+                        url: "/dropdown-options",
+                        method: "GET",
+                        data: { safety: safetyValue },
+                        success: function (data) {
+                            // Update dropdown options
+                            var dropdown = $("#doctype"); // Replace "yourDropdownID" with the actual ID of your dropdown
+                            dropdown.empty().append("<option value='' disabled selected>Select an option</option>");
+                            if (data && data.options && data.options.length > 0) {
+                                $.each(data.options, function (index, option) {
+                                    dropdown.append($("<option></option>").attr("value", option).text(option));
+                                });
+                            } else {
+                                dropdown.append($("<option></option>").attr("value", "").text("No options available"));
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error fetching dropdown options:", error);
+                        }
+                    });
+                }
+                
+
+                $("#safety").on("change", function () {
+                    $("#tdrwtype, #tskmtype").hide();
+                    $("#docno, #docno2").val(" ");
+                    updateDropdownOptions();
+                });
+
+                function editDelModalSave() {
+                    // Get the updated document data from the form fields
+                    var DocNo = document.getElementById('edit-doc-no').innerText;
+                    var DocName = document.getElementById('edit-doc-name').value;
+                    var Sheets = document.getElementById('edit-sheets').value;
+                    var ClientNo = document.getElementById('edit-client-no').value;
+                    const safetyCheckbox = document.getElementById("edit-safety");
+                    const safetyValue = safetyCheckbox.checked;
+                    const Safety = safetyValue ? 1 : 0;
+                    $.ajax({
+                        url: "/update-deliverable",
+                        method: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({ sheets: Sheets, docno: DocNo, docname: DocName, safety: Safety, clientno: ClientNo }),
+                        success: function (data) {
+                            
+                            //update click event for clickable rows
+                            addRowsToTable(data.deliverables);
+                            attachClickableRowEvent();
+                            attachEventListenerPDF();
+                            closeEditModal();
+                            //update table
+                            
+                        },
+                        error: function (xhr, status, error) {
+                            // Log and handle errors
+                            console.error("Error:", error);
+                            // Optionally, display an error message to the user
+                            // alert("An error occurred while fetching document number");
+                        }
+                    });
+                
+
+
+                }
+
+                function attachEventListenerPDF() {
+                    var viewPDFTransmittalButton = document.querySelectorAll('#view-pdf-button');
+                
+                    viewPDFTransmittalButton.forEach(button => {
+                        button.addEventListener('click', (event) => {
+                            
+                            var table = document.getElementById('trtable');
+                            var rows = table.getElementsByClassName('clickable-row active');
+                            
+                            // Initialize trno outside the loop
+                            var trno;
+                
+                            // Loop through rows to get the trno value
+                            for (var i = 0; i < rows.length; i++) {
+                                trno = rows[i].dataset.trno;
+                            }
+                            console.log("The transmittal number is: ", trno);
+                            var params = JSON.stringify({
+                                docno: trno,
+                                projdb: '<%- JSON.stringify(projdb) %>'
+                            });
+                
+                            $.ajax({
+                                url: "/view-pdf",
+                                method: "POST",
+                                data: params,
+                                contentType: 'application/json',
+                                xhrFields: {
+                                    responseType: 'blob' // Set the response type to blob
+                                },
+                                success: function(response, status, xhr) {
+                                    // Create a blob URL from the response
+                                    var blob = new Blob([response], { type: 'application/pdf' });
+                                    var url = window.URL.createObjectURL(blob);
+
+
+                                    var modal = document.getElementById('pdf-modal');
+                                    modal.classList.add('is-active');
+
+                                    var iframe = document.getElementById('pdf');
+                                    iframe.src = url;
+                                    // Set the src attribute of the iframe to the blob URL
+                                    //document.getElementById('pdf').src = url;
+
+                                    //var a = document.createElement('a');
+                                    //a.href = url;
+                                    //a.download = docno + '.pdf';
+                                    //document.body.appendChild(a); // Add the a element to the DOM
+                                    //a.click();
+                                    //document.body.removeChild(a); // Remove the a element after click
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error("Error:", error);
+                                }
+                            });
+                
+                        });
+                    });
+                }
+                
+                
+                function attachEventListener(){
+                    // Get all elements with the class 'EDIT-TRANSMITTAL'
+                    var editTransmittalButton = document.querySelectorAll('#edit-transmittal');
+                    
+                    editTransmittalButton.forEach(button => {
+                        button.addEventListener('click', (event) => {
+                            
+                            var modal = document.getElementById('edit-transmittal-modal');
+                            const AddDelselectTr = document.getElementById('tr_addeloption');
+                            const remDelselectTr = document.getElementById('tr_remdeloption');
+                            const searchInput = document.getElementById('tr_searchdeltext');
+                            var approvalCheckbox = document.getElementById("tr_approval");
+                            var closeoutCheckbox = document.getElementById("tr_closeout");
+                            var constructionCheckbox = document.getElementById("tr_construction");
+                            var informationCheckbox = document.getElementById("tr_information");
+                            var quotationCheckbox = document.getElementById("tr_quotation");
+                            var tenderCheckbox = document.getElementById("tr_tender");
+                            
+                            var table = document.getElementById('trtable');
+                            var rows = table.getElementsByClassName('clickable-row active');
+
+                            const desc = '';
+                            AddDelselectTr.innerHTML = '';
+                            remDelselectTr.innerHTML = '';
+                            modal.classList.add('is-active'); 
+  
+    
+                            for (var i = 0; i < rows.length; i++) {
+                                var trno = rows[i].dataset.trno;
+                                var trname = rows[i].dataset.trname;
+                                var complete = rows[i].dataset.complete;
+                                var cancelled = rows[i].dataset.cancelled;
+                                var issuedate = rows[i].dataset.issuedate;
+                                var expretdate = rows[i].dataset.expretdate;
+                                var transmitto = rows[i].dataset.transmitto;
+                                var herocontact = rows[i].dataset.herocontact;
+                                var issuedvia = rows[i].dataset.issuedvia;
+                                var approval = rows[i].dataset.approval;
+                                var closeout = rows[i].dataset.closeout;
+                                var construction = rows[i].dataset.construction;
+                                var information = rows[i].dataset.information;
+                                var quotation = rows[i].dataset.quotation;
+                                var tender = rows[i].dataset.tender;
+                                var remarks = rows[i].dataset.remarks;
+                                var transmitted_documents = [rows[i].dataset.transmitted_documents];
+                                var docno = rows[i].dataset.docno;
+                                var docname = [rows[i].dataset.docname];
+                                var rev = rows[i].dataset.rev;
+
+                               if(issuedate === ' ' || issuedate === null) {
+                                setDefaultDatesEditTr();
+                               } else {
+
+                                var issuedate = new Date(issuedate);
+                                var issued = issuedate.toISOString().split("T")[0];
+
+                                var expectRetDate = new Date(expretdate);
+                                var expRetD = expectRetDate.toISOString().split("T")[0];
+                               
+
+                               }
+                                
+                               
+                                
+                                document.getElementById('trno').innerHTML = trno;
+                                document.getElementById('trTo').value = transmitto;
+                                document.getElementById('HeroContact').value = herocontact;
+                                document.getElementById('issued_via').value = issuedvia;
+                                document.getElementById('trName').value = trname;
+                                document.getElementById('remarks').value = remarks;
+                                document.getElementById('trissuedate').value = issued;
+                                document.getElementById('trexpretdate').value = expRetD;
+    
+                               
+                               
+                                // Set the checkbox state based on the attribute value
+                                approvalCheckbox.checked = approval === "1";
+                                closeoutCheckbox.checked = closeout === "1";
+                                constructionCheckbox.checked = construction === "1";
+                                informationCheckbox.checked = information === "1";
+                                quotationCheckbox.checked = quotation === "1";
+                                tenderCheckbox.checked = tender === "1";
+                            }
+    
+                            var params = JSON.stringify({
+                                docno: trno
+    
+    
+    
+                            })
+    
+                            $.ajax({
+                                url: "/transmittal-details",
+                                method: "POST",
+                                contentType: 'application/json',
+                                data: params,
+                                success: function(data) {
+                                    // Add options to AddDelselectTr
+
+                                    if (data.addel.length > 0) {
+                                    data.addel.forEach(item => {
+                                        const optionAddDel = document.createElement('option');
+                                        optionAddDel.value = item.docno + "|" + item.revid;
+                                        optionAddDel.textContent = item.desc;
+                                        AddDelselectTr.appendChild(optionAddDel);
+                                    });
+                                    }
+                            
+                                    // Check if there are no values added to remDelselectTr
+                                    if (data.remDel.length > 0) {
+                                        // Add options to remDelselectTr
+                                        data.remDel.forEach(item => {
+                                            const optionRemDel = document.createElement('option');
+                                            optionRemDel.value = item.docno + "|" + item.revid;
+                                            optionRemDel.textContent = item.desc;
+                                            remDelselectTr.appendChild(optionRemDel);
+                                        });
+                                    }
+                                    delcounttr();
+                                    
+                                },
+                                error: function (xhr, status, error) {
+                                    console.error("Error fetching dropdown options:", error);
+                                }
+                            });
+    
+    
+                            searchInput.addEventListener('input', () => {
+                                filterOptions(AddDelselectTr, searchInput.value.toLowerCase());
+                            });
+    
+    
+                            
+    
+                        });
+                    });
+
+                    }
+                    function delcount() {
+                        const remDelselect = document.getElementById('remdeloption');
+                        $(remDelselect).children('option[value="null|null"]').remove(); // Remove null options
+                        const validOptions = $(remDelselect).children('option'); // Get remaining options
+                        $("div.delcount").html("Deliverables returned: <strong>" + validOptions.length + "</strong>"); // Count remaining options
+                    }
+                    
+                    function delcounttr() {
+                        const remDelselect = document.getElementById('tr_remdeloption');
+                        const Addelselect = document.getElementById('tr_addeloption');
+                        $(remDelselect).children('option[value="null|null"]').remove();
+                        $(Addelselect).children('option[value="null|null"]').remove();
+                        //$(remDelselect).children('option[value="null|null"]').remove();
+                        $(Addelselect).children('option[value="undefined|undefined"]').remove();
+                        const validOptions = $(remDelselect).children('option');
+                        $("div.delcount").html("Deliverables Attached: <strong>" + validOptions.length + "</strong>");
+                    }
+                    
+                    function delcountAddtr() {
+                        const remDelselect = document.getElementById('addtr_remdeloption');
+                        $(remDelselect).children('option[value="null|null"]').remove();
+                        const validOptions = $(remDelselect).children('option');
+                        $("div.delcount").html("Deliverables returned: <strong>" + validOptions.length + "</strong>");
+                    }
+                    
+                    
+                    
+                    
+                    
+                    function returnDeliverables(docno, callback) {
+                        var modal = document.getElementById("return-modal");
+                        modal.classList.add("is-active");
+                        const AddDelselect = document.getElementById('addeloption');
+                        const remDelselect = document.getElementById('remdeloption');
+                        const searchInput = document.getElementById('searchdeltext');
+                        params = JSON.stringify({
+                            docno : docno
+                        })
+
+
+
+                        $.ajax({
+                            url: "/return-deliverable",
+                            method: "POST",
+                            contentType: 'application/json',
+                            data: params,
+                            success: function (data) {
+                                data.filteredDeliverables.forEach(item => {
+                                    const optionAddDel = document.createElement('option');
+                                    optionAddDel.value = item.docno + '|' + item.revid.toString() + '|' + item.issuedate;
+                                    optionAddDel.textContent = item.optionValue;
+                                    AddDelselect.appendChild(optionAddDel);
+                                });
+                                data.removedDeliverables.forEach(item => {
+                                    const optionRemDel = document.createElement('option');
+                                    optionRemDel.value = item.docno + '|' + item.revid.toString() + '|' + item.issuedate;
+                                    optionRemDel.textContent = item.optionValue;
+                                    remDelselect.appendChild(optionRemDel);
+                                });
+                                searchInput.addEventListener('input', () => {
+                                    filterOptions(AddDelselect, searchInput.value.toLowerCase());
+                                });
+                                returneDeliverableId = data.revid;
+                                delcount();
+                                
+                            },
+                            error: function (xhr, status, error) {
+                                console.error("Error fetching dropdown options:", error);
+                            }
+                        });
+                    }
+
+
+                    function closeTransmittalModal() {
+                        var modal = document.getElementById("edit-transmittal-modal");
+                        modal.classList.remove("is-active");
+                        attachClickableRowEvent();
+                        attachEventListenerPDF();
+                       
+    
+    
+                    }
+                    function returnModalClose() {
+                        var modal = document.getElementById("return-modal");
+                        modal.classList.remove("is-active");
+                        attachClickableRowEvent();
+                        attachEventListenerPDF();
+                       
+                    }
+    
+                    function supersedeModalClose() {
+                        var modal = document.getElementById("supersede-modal");
+                        modal.classList.remove("is-active");
+                        attachClickableRowEvent();
+                        attachEventListenerPDF();
+                        
+    
+                    }
+    
+                    function closeReturndelModal() {
+                        var modal = document.getElementById("return-modal");
+                        modal.classList.remove('is-active');
+                 
+    
+                    }
+    
+                    function returnTransmittalModalClose(){
+                        var modal = document.getElementById("return-transmittal-modal");
+                        modal.classList.remove('is-active');
+                        attachClickableRowEvent();
+                        attachEventListenerPDF();
+                    }
+    
+
+                    function filterOptions(selectElement, searchTerm) {
+                        const options = Array.from(selectElement.options);
+                        options.forEach(option => {
+                            if (option.textContent.toLowerCase().includes(searchTerm)) {
+                                option.style.display = '';
+                            } else {
+                                option.style.display = 'none';
+                            }
+                        });
+                    }
+        
+        
+        
+        
+                    async function fetchDrawingOptions() {
+                        try {
+                            const response = await fetch('/drawing-options');
+                            const data = await response.json();
+                            return data;
+                        } catch (error) {
+                            console.error("Error fetching drawing options:", error);
+                        }
+                    }
+        
+                    async function fetchSKMOptions() {
+                        try {
+                            const response = await fetch('/skm-options');
+                            const data = await response.json();
+                            return data;
+                        } catch (error) {
+                            console.error("Error fetching SKM options:", error);
+                        }
+                    }
+        
+                    async function DRWupdateDropdownOptions(dropdown, data) {
+                        dropdown.empty();
+                        if (data && data.options && data.options.length > 0) {
+                            data.options.forEach(option => {
+                                dropdown.append($("<option></option>").attr("value", option).text(option));
+                            });
+                        } else {
+                            dropdown.append($("<option></option>").attr("value", "").text("No options available"));
+                        }
+        
+        
+                    }
+        
+                    async function BLKupdateDropdownOptions(dropdown, data) {
+                        dropdown.empty();
+                        if (data && data.blocks && data.blocks.length > 0) {
+                            data.blocks.forEach(option => {
+                                dropdown.append($("<option></option>").attr("value", option).text(option));
+                            });
+                        } else {
+                            dropdown.append($("<option></option>").attr("value", "").text("No options available"));
+                        }
+        
+        
+                    }
+        
+                    async function SKMupdateDropdownOptions(dropdown, data) {
+                        dropdown.empty();
+                        if (data && data.options && data.options.length > 0) {
+                            data.options.forEach(option => {
+                                dropdown.append($("<option></option>").attr("value", option).text(option));
+                            });
+                        } else {
+                            dropdown.append($("<option></option>").attr("value", "").text("No options available"));
+                        }
+        
+        
+                    }
+        
+                    async function DRWtoggleInitializeRow() {
+                        const drawingData = await fetchDrawingOptions();
+                        console.log(drawingData);
+                        DRWupdateDropdownOptions($("#drwtype"), drawingData);
+                        BLKupdateDropdownOptions($("#blocktype"), drawingData);
+                    }
+        
+                    async function SKMtoggleInitializeRow() {
+                        const skmData = await fetchSKMOptions();
+                        SKMupdateDropdownOptions($("#skmtype"), skmData);
+                    }
+        
+                    async function toggleDrawingTypeRow(selectedType, selectedSheets) {
+                        if (!selectedType) {
+                            console.error("Selected type is null or empty");
+                            return;
+                        }
+        
+        
+                        selectedType = selectedType.substr(0, selectedType.lastIndexOf('-'));
+                        console.log(selectedType);
+                        switch (selectedType) {
+                            case "DWG":
+                                $("#tdrwtype").show();
+                                $("#tskmtype").hide();
+        
+                                var drwtypeVal = $("#drwtype").val();
+                                var blocktypeVal = $("#blocktype").val();
+                                if (!drwtypeVal || !blocktypeVal) {
+                                    console.error("DWG options are not selected");
+                                    return;
+                                }
+                                var docno = selectedType + "-" + drwtypeVal.substr(0, drwtypeVal.indexOf('-')) + "-" + blocktypeVal.substr(0, blocktypeVal.indexOf('-')).trim();
+                                console.log(docno);
+                                break;
+                            case "SKM":
+                                $("#tskmtype").show();
+                                $("#tdrwtype").hide();
+                                var skmtypeVal = $("#skmtype").val();
+                                if (!skmtypeVal) {
+                                    console.error("SKM options are not selected");
+                                    return;
+                                }
+                                var docno = selectedType + "-" + skmtypeVal.substr(0, skmtypeVal.indexOf('-')) + '-';
+                                console.log(docno);
+                                break;
+                            default:
+                                $("#tskmtype").hide();
+                                $("#tdrwtype").hide();
+        
+                                var docno = selectedType + "-";
+                                console.log(docno);
+                                break;
+                        }
+                        getDocNo(docno, selectedSheets);
+                    }
+        
+                    async function getDocNo(docno, alloc) {
+                        if (!docno) {
+                            console.error("Bad Request: docno is required");
+                            return;
+                        } else if (isNaN(alloc)) {
+                            $("input#alloc").val(1);
+                        } else if (alloc > 100) {
+                            alert("The number of documents to reserve cannot exceed 100")
+                            $("input#alloc").val(1);
+        
+                        }
+        
+                        console.log("Doctype received on the client:", docno);
+        
+                        // Make a POST request to the /docno endpoint
+                        $.ajax({
+                            url: "/docno",
+                            method: "POST",
+                            contentType: "application/json",
+                            data: JSON.stringify({ docno: docno, alloc: alloc }),
+                            success: function (data) {
+                                // Update the document number in the HTML
+                                $("td.docno").html(data.docno);
+                                // Update the block number in the HTML
+                                $("td.docno2").html(data.docno2);
+                                // Optionally, call a function to handle the response
+                                // getBlock(data);
+                            },
+                            error: function (xhr, status, error) {
+                                // Log and handle errors
+                                console.error("Error:", error);
+                                // Optionally, display an error message to the user
+                                // alert("An error occurred while fetching document number");
+                            }
+                        });
+                    }
+        
+        
+        
+                    $(document).on('click', '.supersede-button', async function () {
+                        var modal = document.getElementById("supersede-modal");
+                        modal.classList.add("is-active");
+        
+                        var currentDate = new Date();
+                        var formattedDate = currentDate.toISOString().split('T')[0];
+                        document.getElementById("revdate").value = formattedDate;
+        
+        
+        
+                        var docno = $(this).data("doc-no");
+                        $("#docno").val(docno);
+                        var subrev = $(this).data("subrev") == null ? "Empty" : $(this).data("subrev");
+        
+                        var subrev = $(this).data("subrev") !== null || $(this).data("subrev") !== '' ? $(this).data("subrev") : " ";
+                        $("#subrev").val(subrev);
+        
+                        console.log("The subrev on the supersede modal is:", subrev);
+                        var doc = docno + "-" + $(this).data("doc-name");
+                        $("#supersede-doc-no").html(doc);
+                        var past_revisions = await fetchPastRevisions(docno);
+        
+        
+        
+                        var data = await fetchRevisionOptions(past_revisions.largestLatestRevid);
+                        console.log("The data is: ", data);
+                        // Clear the existing options in the dropdown
+                        $("#revision-history").empty();
+                        past_revisions.pastrevisions.forEach(function (pastrevisions) {
+                            var schedate_formatted = new Date(pastrevisions.schedate);
+                            var schedate_year = schedate_formatted.getUTCFullYear();
+                            console.log("The years are:", schedate_year);
+                            var row = `<tr>
+                                        <td>${typeof pastrevisions.revdesc !== 'undefined' && pastrevisions.revdesc !== null ? pastrevisions.revdesc[0] + (pastrevisions.subrev !== null && pastrevisions.subrev !== ' ' ? pastrevisions.subrev : '') + '-' + pastrevisions.revdesc[1] : '-'}</td>                        
+                                        <td>Rev Date: ${pastrevisions.revdate} - Scheduled Issue: ${pastrevisions.schedate}</td>
+                                        
+                                      </tr>`;
+                            $("#revision-history").append(row);
+                        });
+        
+                        // Add a default option to the dropdown
+                        $("#revision-dropdown").append("<option value=''>Select a revision...</option>");
+                        // Clear the existing options in the dropdown
+                        $("#revision-dropdown").empty();
+                        // Add each revision option to the dropdown
+                        data.revision.forEach(function (revision) {
+        
+                            $("#revision-dropdown").append("<option value='" + (revision.rev + "-" + revision.revdesc) + "'data-rev='" + revision.rev + "' data-revdesc='" + revision.revdesc + "' data-revid='" + revision.revid + "'>" + (revision.rev + "-" + revision.revdesc) + "</option>");
+        
+        
+                        });
+        
+        
+                    });
+                    function setDefaultDateRetTr() {
+                        var today = new Date();
+                        var returndate = today.toISOString().split("T")[0];
+                        document.getElementById("returntrdate").value = returndate;
+                        
+                    }
+        
+                    function delcountRettr() {
+                        const remDelselect = document.getElementById('returntr_remdeloption');
+                        $(remDelselect).children('option[value="null|null"]').remove();
+                        const validOptions = $(remDelselect).children('option');
+                        $("div.delcount").html("Deliverables returned: <strong>" + validOptions.length + "</strong>");
+                    }
+        
+                    $(document).on('click', '#return-transmittal', function () {
+                        var modal = document.getElementById('return-transmittal-modal');
+                                modal.classList.add("is-active");
+                        
+                                setDefaultDateRetTr();
+                                const AddDelselectTr = document.getElementById('returntr_addeloption');
+                                const remDelselectTr = document.getElementById('returntr_remdeloption');
+                                var approvalCheckbox = document.getElementById("returntr_approval");
+                                var closeoutCheckbox = document.getElementById("returntr_closeout");
+                                var constructionCheckbox = document.getElementById("returntr_construction");
+                                var informationCheckbox = document.getElementById("returntr_information");
+                                var quotationCheckbox = document.getElementById("returntr_quotation");
+                                var tenderCheckbox = document.getElementById("returntr_tender");
+                                var table = document.getElementById('trtable');
+                                var rows = table.getElementsByClassName('clickable-row active');
+                        
+                                const desc = '';
+                                AddDelselectTr.innerHTML = '';
+                                remDelselectTr.innerHTML = '';
+                        
+                                for (var i = 0; i < rows.length; i++) {
+                                    var trno = rows[i].dataset.trno;
+                                    var trname = rows[i].dataset.trname;
+                                    var complete = rows[i].dataset.complete;
+                                    var cancelled = rows[i].dataset.cancelled;
+                                    var issuedate = rows[i].dataset.issuedate;
+                                    var expretdate = rows[i].dataset.expretdate;
+                                    var transmitto = rows[i].dataset.transmitto;
+                                    var herocontact = rows[i].dataset.herocontact;
+                                    var issuedvia = rows[i].dataset.issuedvia;
+                                    var approval = rows[i].dataset.approval;
+                                    var closeout = rows[i].dataset.closeout;
+                                    var construction = rows[i].dataset.construction;
+                                    var information = rows[i].dataset.information;
+                                    var quotation = rows[i].dataset.quotation;
+                                    var tender = rows[i].dataset.tender;
+                                    var remarks = rows[i].dataset.remarks;
+                                    var transmitted_documents = [rows[i].dataset.transmitted_documents];
+                                    var docno = rows[i].dataset.docno;
+                                    var docname = [rows[i].dataset.docname];
+                                    var rev = rows[i].dataset.rev;
+                        
+                                    document.getElementById('returntrno').innerText = trno;
+                                    document.getElementById('returntrissuedate').innerText = issuedate;
+                                    document.getElementById('returntrexpretdate').innerText = expretdate;
+                                    document.getElementById('returntrTo').innerText = transmitto;
+                                    document.getElementById('returnHeroContact').innerText = herocontact;
+                                    document.getElementById('returnissued_via').innerText = issuedvia;
+                                    document.getElementById('returntrName').innerText = trname;
+                        
+                                    // Set the checkbox state based on the attribute value
+                                    approvalCheckbox.checked = approval === "1";
+                                    closeoutCheckbox.checked = closeout === "1";
+                                    constructionCheckbox.checked = construction === "1";
+                                    informationCheckbox.checked = information === "1";
+                                    quotationCheckbox.checked = quotation === "1";
+                                    tenderCheckbox.checked = tender === "1";
+                        
+                                    approvalCheckbox.disabled = true;
+                                    closeoutCheckbox.disabled = true;
+                                    constructionCheckbox.disabled = true;
+                                    informationCheckbox.disabled = true;
+                                    quotationCheckbox.disabled = true;
+                                    tenderCheckbox.disabled = true;
+                        
+                                    var params = JSON.stringify({
+                                        docno: trno
+                                    });
+                        
+                                    $.ajax({
+                                        url: "/return-transmittal-details",
+                                        method: "POST",
+                                        contentType: 'application/json',
+                                        data: params,
+                                        success: function (data) {
+                                            data.addel.forEach(item => {
+                                                const optionAddDel = document.createElement('option');
+                                                optionAddDel.value = item.docno + "|" + item.revid;
+                                                optionAddDel.textContent = item.desc;
+                                                AddDelselectTr.appendChild(optionAddDel);
+                                            });
+                        
+                                            delcountRettr();
+                                        },
+                                        error: function (xhr, status, error) {
+                                            console.error("Error Fetching the transmittal details:", error);
+                                        }
+                                    });
+                                }
+        
+        
+                    });
+        
+        
+                    $(document).on('click', '.edit-button', function () {
+                        // Show the modal
+                        var modal = document.getElementById("edit-modal");
+                        modal.classList.add("is-active");
+                        console.log("Modal Active");
+        
+                        // Fill in the form fields with the current document data
+                        var docNo = $(this).data("doc-no");
+                        var docName = $(this).data("doc-name");
+                        var sheets = $(this).data("sheets");
+                        var revision = $(this).data("revision");
+                        var revisionDate = $(this).data("revision-date");
+                        var clientNo = $(this).data("client-no");
+                        var safety = $(this).data("safety");
+                        document.getElementById('edit-doc-no').innerText = docNo;
+                        document.getElementById('edit-doc-name').value = docName;
+                        document.getElementById('edit-sheets').value = sheets;
+                        document.getElementById('edit-client-no').value = clientNo;
+                        if (safety === 1) {
+                            document.getElementById('edit-safety').checked = true;
+                        } else {
+                            document.getElementById('edit-safety').checked = false;
+                        }
+        
+                    });
+        
+        
+        
+        
+        
+                    async function fetchPastRevisions(docno) {
+                        try {
+                            const body = {
+        
+                                projdb: '<%- JSON.stringify(projdb) %>',
+                                docno: docno
+        
+        
+                            }; // Define the body object
+                            const response = await fetch('/past-revisions', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(body)
+                            });
+                            const data = await response.json();
+                            console.log("The past revisions are: ", data);
+                            return data;
+                        } catch (error) {
+                            console.error("Error fetching past revisions:", error);
+                        }
+        
+        
+        
+        
+                    }
+        
+        
+        
+                    async function fetchRevisionOptions(largestRev) {
+                        try {
+                            const body = { projdb: '<%- JSON.stringify(projdb) %>', largestRev: largestRev }; // Define the body object
+                            const response = await fetch('/revision-options', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(body)
+                            });
+                            const data = await response.json();
+                            console.log("The revision options received is:", data);
+                            return data;
+                        } catch (error) {
+                            console.error("Error fetching drawing options:", error);
+                        }
+                    }
+        
+        
+        
+                    fetchRevisionOptions().then(options => {
+        
+                        // Create an option element for each revision
+                        options.revision.forEach(option => {
+                            const select = document.getElementById('revision-dropdown');
+                            select.innerHTML = '';
+                            const optionElement = document.createElement('option');
+                            optionElement.value = option.rev + '-' + option.revdesc;
+                            optionElement.textContent = option.rev + '-' + option.revdesc;
+                            select.appendChild(optionElement);
+                        });
+                    });
+        
+        
+        
+        
+                    // Add event listener for saving changes in the edit modal
+        
+        
+        
+                    $("#doctype, #drwtype, #blocktype, #skmtype, #alloc").on("change", function () {
+                        var selectedType = $("#doctype").val();
+                        var selectedSheets = $("#alloc").val();
+                        toggleDrawingTypeRow(selectedType, selectedSheets);
+        
+                    });
+        
+                })
+                        
+
+                
+
+            //################################################################
+           
+          
+
+
+           
+
+            
+        </script>
+
+</body>
+
+</html>

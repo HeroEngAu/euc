@@ -1,0 +1,139 @@
+<div id="add-deliverable-modal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head" id="modal-card-header">
+            <p class="modal-card-title">Add Deliverable</p>
+            <button id="close-modal-button" class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body" id="card-body">
+            <p class="subtitle">Enter the details for the new deliverable:</p>
+
+            <table class="tdoctype">
+                <thead>
+                    <tr class="row_doctype" id="r_doctype">
+                        <th colspan="2">Document Type</th>
+                        <th colspan="2">Documents to Reserve</th>
+                    </tr>
+                </thead>
+                <tr class="row_doctype">
+                    <td>
+                        <input type="checkbox" id="safety">
+                        <label for="safety">Safety</label>
+                    </td>
+                    <td colspan="1">
+                        <div class="select">
+                            <select name="doctype" class="form-select" id="doctype" required>
+                                <option value="">Select document type</option>
+                            </select>
+                        </div>
+                    </td>
+                    <td colspan="2"><input type="text" id="alloc" value="1" size="5"></td>
+                </tr>
+            </table>
+
+            <table class="tdrwtype" id="tdrwtype">
+                <thead>
+                    <tr>
+                        <th>Drawing Type</th>
+                        <th colspan="2">Electrical Drawing Type</th>
+                        <th colspan="4">
+                            <a id="editType" href="#">Edit Types</a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="row_drawingtype" id="r_drawingtype">
+                        <td>
+                            <div class="select">
+                                <select name="drawingtype" class="form-select" id="drwtype" required>
+                                    <option value="">Select document type</option>
+                                </select>
+                            </div>
+                        </td>
+
+                        <td colspan="3">
+                            <div class="select">
+                                <select name="drawingblock" class="form-select" id="blocktype" required>
+                                    <option value="">Select drawing type</option>
+
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+
+
+            </table>
+            <table class="tskmtype" id="tskmtype">
+                <thead>
+                    <tr class='row_skmtype'>
+                        <th colspan=4>SKM Document Type
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="row_skmtype">
+                        <td colspan=4>
+                            <div class="select">
+                                <select name="skmtype" class="form-select" id="skmtype" required>
+                                    <option value="">Select SKM Document Type</option>
+
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
+
+
+                </tbody>
+
+            </table>
+
+            <table class="details">
+                <tr>
+                    <th colspan=2>New document number</th>
+                    <th colspan=2>Sheets</th>
+
+                </tr>
+
+                <tr>
+                    <td class="docno" id="docno">
+                        <!%= docno %>
+                    </td>
+                    <td class="docno2" id="docno2">
+                        <!%= docno2 %>
+
+                    </td>
+                    <td class="has-text-left" colspan=2>
+                        <input type="text" id="sheets" value=1 />
+                    </td>
+
+                </tr>
+
+                <tr>
+                    <th colspan="4" id="name">Document Name *</th>
+                </tr>
+
+                <tr>
+                    <td colspan=4> <textarea id="docname" rows="2" style="color: #000;" required></textarea>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <th colspan="4">Client Document Number</th>
+                </tr>
+
+
+                <tr>
+                    <td colspan="4"> <input type="text" id="clientno" value=""> </td>
+                </tr>
+
+            </table>
+            <div class="field is-grouped is-grouped-right">
+                <div class="control">
+                    <button id="save-button" class="button is-primary">Save new deliverable</button>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
