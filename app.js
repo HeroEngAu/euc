@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const app = express();
 const port = 3000;
-const { createPdConnection, createTsConnection, dbinit, tblinit } = require('./db');
+const { createPdConnection, createTsConnection, executeTsQuery, dbinit, tblinit } = require('./db');
 const { Console, count } = require('console');
 const { PDFDocument, rgb, pdfDocEncodingDecode, StandardFonts } = require('pdf-lib');
 const fs = require('fs').promises;
@@ -127,29 +127,29 @@ app.post('/return-transmittal-details', async (req, res) => {
     const pdresult_trIssued = await pdConnection.query(pdquery_trIssued);
     console.log(pdresult_trIssued);
 
-    
+
 
     const trIssued_Addel = pdresult_trIssued[0].map(trIssued => {
       if (trIssued.rev !== '' && trIssued.rev !== null) {
-          // Split the rev string into first character and rest of characters
-          const firstChar = trIssued.rev.charAt(0);
-          const restOfChars = trIssued.rev.substring(1);
-  
-          // Convert the first character to a number using rev function
-          const firstCharNumber = rev(parseInt(firstChar));
-          console.log(firstCharNumber);
-          // Concatenate the first character number and the rest of characters (if any)
-          trIssued.rev = restOfChars.length > 0 ? firstCharNumber[0] + restOfChars:firstCharNumber[0];
+        // Split the rev string into first character and rest of characters
+        const firstChar = trIssued.rev.charAt(0);
+        const restOfChars = trIssued.rev.substring(1);
+
+        // Convert the first character to a number using rev function
+        const firstCharNumber = rev(parseInt(firstChar));
+
+        // Concatenate the first character number and the rest of characters (if any)
+        trIssued.rev = restOfChars.length > 0 ? firstCharNumber[0] + restOfChars : firstCharNumber[0];
       } else {
-          trIssued.rev = '';
+        trIssued.rev = '';
       }
-  
+
       // Construct the description using docno, rev, and docname
       trIssued.desc = (trIssued.docno !== null && trIssued.rev !== null && trIssued.docname !== null) ?
-          trIssued.docno + "-" + "r." + trIssued.rev + "-" + trIssued.docname : '';
-  
+        trIssued.docno + "-" + "r." + trIssued.rev + "-" + trIssued.docname : '';
+
       return trIssued;
-  });
+    });
 
     res.status(200).json({ addel: trIssued_Addel });
 
@@ -167,55 +167,55 @@ app.post('/transmittal-details', async (req, res) => {
   const transdel = {};
 
   try {
-      // First query to fetch transmittal details
-      const pdqueryTranDetails = await pdConnection.query(`SELECT t.docno AS trno, t.docname AS trname, t.issuedate, t.expretdate, t.returndate, t.transmitto, t.herocontact, t.issuedvia, t.approval, t.closeout, t.construction, t.information, t.quotation, t.tender, t.remarks, td.docno AS docno, d.docname AS docname, CONCAT(r.revid, IFNULL(r.subrev,'')) AS rev, td.revid AS revid FROM ((transmittals AS t LEFT JOIN transdel AS td ON t.docno = td.trandocno) LEFT JOIN deliverables AS d ON d.docno=td.docno) LEFT JOIN revisions AS r ON td.revid = r.id WHERE t.docno = '${docno}'`);
+    // First query to fetch transmittal details
+    const pdqueryTranDetails = await pdConnection.query(`SELECT t.docno AS trno, t.docname AS trname, t.issuedate, t.expretdate, t.returndate, t.transmitto, t.herocontact, t.issuedvia, t.approval, t.closeout, t.construction, t.information, t.quotation, t.tender, t.remarks, td.docno AS docno, d.docname AS docname, CONCAT(r.revid, IFNULL(r.subrev,'')) AS rev, td.revid AS revid FROM ((transmittals AS t LEFT JOIN transdel AS td ON t.docno = td.trandocno) LEFT JOIN deliverables AS d ON d.docno=td.docno) LEFT JOIN revisions AS r ON td.revid = r.id WHERE t.docno = '${docno}'`);
 
-      // Populate transdel object with docno as key and an array containing rev, revid, and docname as value
-      for (const pdrow of pdqueryTranDetails[0]) {
-          transdel[pdrow['docno']] = [pdrow['rev'], pdrow['revid'], pdrow['docname']];
+    // Populate transdel object with docno as key and an array containing rev, revid, and docname as value
+    for (const pdrow of pdqueryTranDetails[0]) {
+      transdel[pdrow['docno']] = [pdrow['rev'], pdrow['revid'], pdrow['docname']];
+    }
+
+    // Second query to fetch deliverables
+    const pdqueryDeliverables = "SELECT * FROM deliverables LEFT JOIN (SELECT rev.docno, revisions.id as revid, rev.revid as rev, revisions.revdate, max(revisions.subrev) as subrev, revisions.revdesc, revisions.issuedate FROM (SELECT DISTINCT docno, max(id) AS id, max(revid) AS revid FROM revisions GROUP BY docno) AS rev LEFT JOIN revisions USING (docno, id) GROUP BY rev.docno) AS r USING (docno) WHERE issuedate = '0000-00-00'";
+    const pdresultDeliverables = await pdConnection.query(pdqueryDeliverables);
+    console.log(pdresultDeliverables);
+    // Filter deliverables based on transdel
+    const trIssued_Addel = pdresultDeliverables[0].filter(del => !(del['docno'] in transdel)).map(trIssued => {
+      trIssued.rev = rev(parseInt(trIssued.rev));
+      trIssued.rev = trIssued.subrev !== null && trIssued.subrev !== ' ' ? trIssued.rev[0] + "." + trIssued.subrev : trIssued.rev[0];
+      trIssued.desc = (trIssued.docno !== null && trIssued.rev !== null && trIssued.docname !== null) ? trIssued.docno + "-" + "r." + trIssued.rev + "-" + trIssued.docname : '';
+      return trIssued;
+    });
+    console.log(pdqueryTranDetails[0]);
+    // Map the existing deliverables
+    const trIssued_Remdel = pdqueryTranDetails[0].map(trIssued => {
+      if (trIssued.rev !== '' && trIssued.rev !== null) {
+        // Split the rev string into first character and rest of characters
+        const firstChar = trIssued.rev.charAt(0);
+        const restOfChars = trIssued.rev.substring(1);
+
+        // Convert the first character to a number using rev function
+        const firstCharNumber = rev(parseInt(firstChar));
+        console.log(firstCharNumber);
+        // Concatenate the first character number and the rest of characters (if any)
+        trIssued.rev = restOfChars.length > 0 ? firstCharNumber[0] + restOfChars : firstCharNumber[0];
+      } else {
+        trIssued.rev = '';
       }
 
-      // Second query to fetch deliverables
-      const pdqueryDeliverables = "SELECT * FROM deliverables LEFT JOIN (SELECT rev.docno, revisions.id as revid, rev.revid as rev, revisions.revdate, max(revisions.subrev) as subrev, revisions.revdesc, revisions.issuedate FROM (SELECT DISTINCT docno, max(id) AS id, max(revid) AS revid FROM revisions GROUP BY docno) AS rev LEFT JOIN revisions USING (docno, id) GROUP BY rev.docno) AS r USING (docno) WHERE issuedate = '0000-00-00'";
-      const pdresultDeliverables = await pdConnection.query(pdqueryDeliverables);
-      console.log(pdresultDeliverables);
-      // Filter deliverables based on transdel
-      const trIssued_Addel = pdresultDeliverables[0].filter(del => !(del['docno'] in transdel)).map(trIssued => {
-          trIssued.rev = rev(parseInt(trIssued.rev));
-          trIssued.rev = trIssued.subrev !== null && trIssued.subrev !== ' ' ? trIssued.rev[0] + "." + trIssued.subrev : trIssued.rev[0];
-          trIssued.desc = (trIssued.docno !== null && trIssued.rev !== null && trIssued.docname !== null) ? trIssued.docno + "-" + "r." + trIssued.rev + "-" + trIssued.docname : '';
-          return trIssued;
-      });
-      console.log(pdqueryTranDetails[0]);
-      // Map the existing deliverables
-      const trIssued_Remdel = pdqueryTranDetails[0].map(trIssued => {
-        if (trIssued.rev !== '' && trIssued.rev !== null) {
-            // Split the rev string into first character and rest of characters
-            const firstChar = trIssued.rev.charAt(0);
-            const restOfChars = trIssued.rev.substring(1);
-    
-            // Convert the first character to a number using rev function
-            const firstCharNumber = rev(parseInt(firstChar));
-            console.log(firstCharNumber);
-            // Concatenate the first character number and the rest of characters (if any)
-            trIssued.rev = restOfChars.length > 0 ? firstCharNumber[0] + restOfChars:firstCharNumber[0];
-        } else {
-            trIssued.rev = '';
-        }
-    
-        // Construct the description using docno, rev, and docname
-        trIssued.desc = (trIssued.docno !== null && trIssued.rev !== null && trIssued.docname !== null) ?
-            trIssued.docno + "-" + "r." + trIssued.rev + "-" + trIssued.docname : '';
-    
-        return trIssued;
-    });
-    
+      // Construct the description using docno, rev, and docname
+      trIssued.desc = (trIssued.docno !== null && trIssued.rev !== null && trIssued.docname !== null) ?
+        trIssued.docno + "-" + "r." + trIssued.rev + "-" + trIssued.docname : '';
 
-      res.status(200).json({ addel: trIssued_Addel, remDel: trIssued_Remdel });
+      return trIssued;
+    });
+
+
+    res.status(200).json({ addel: trIssued_Addel, remDel: trIssued_Remdel });
 
   } catch (error) {
-      console.error(`Error: ${error.message}`);
-      res.status(500).send('Internal Server Error');
+    console.error(`Error: ${error.message}`);
+    res.status(500).send('Internal Server Error');
   }
 });
 
@@ -280,7 +280,7 @@ app.get('/updateIndexDropdowns', async (req, res) => {
 
     tsResult.forEach((tsRow) => {
       const projCode = `tr_${tsRow.projectcode.toLowerCase()}`;
-      
+
       allProjects[projCode] = `${tsRow.projectcode} - ${tsRow.clientname} - ${tsRow.projectname}`;
     });
 
@@ -289,7 +289,7 @@ app.get('/updateIndexDropdowns', async (req, res) => {
 
 
     console.log("TS connection success")
-    
+
 
     //await tsConnection.close();
 
@@ -312,49 +312,49 @@ app.get('/updateIndexDropdowns', async (req, res) => {
 
     pdRows.forEach((pdRow) => {
       if (pdRow.Database.includes('tr')) {
-        databases.push(pdRow.Database.toUpperCase().substring(3,pdRow.Database.length));
+        databases.push(pdRow.Database.toUpperCase().substring(3, pdRow.Database.length));
       }
     });
 
-    
-;   
+
+    ;
 
     for (const projCode in allProjects) {
-      if (!databases.includes(projCode.toUpperCase().substring(3,projCode.length))) {
-        projectsWithoutDB.push(projCode.toUpperCase().substring(3,projCode.length));
+      if (!databases.includes(projCode.toUpperCase().substring(3, projCode.length))) {
+        projectsWithoutDB.push(projCode.toUpperCase().substring(3, projCode.length));
       }
     }
 
-  
+
     const matchedObjects = [];
 
-// Iterate through each item in the first array
-databases.forEach(item => {
-  // Find matching object in the second array
-  const matchedObject = tsResult.find(obj => obj.projectcode === item);
-  // If a matching object is found, push it to the matchedObjects array
-  if (matchedObject) {
-    var projCode = "tr_" + matchedObject.projectcode.toLowerCase();
-    projects[projCode] = matchedObject.projectcode + "-" + matchedObject.clientname + "-" + matchedObject.projectname
-    
-  }
-});
+    // Iterate through each item in the first array
+    databases.forEach(item => {
+      // Find matching object in the second array
+      const matchedObject = tsResult.find(obj => obj.projectcode === item);
+      // If a matching object is found, push it to the matchedObjects array
+      if (matchedObject) {
+        var projCode = "tr_" + matchedObject.projectcode.toLowerCase();
+        projects[projCode] = matchedObject.projectcode + "-" + matchedObject.clientname + "-" + matchedObject.projectname
+
+      }
+    });
 
 
-// Get an array of keys from allProjects and projects
-const allProjectKeys = Object.keys(allProjects);
-const projectKeys = Object.keys(projects);
+    // Get an array of keys from allProjects and projects
+    const allProjectKeys = Object.keys(allProjects);
+    const projectKeys = Object.keys(projects);
 
-// Filter the allProjectKeys to keep only the keys that are not in projects
-const filteredProjectKeys = allProjectKeys.filter(key => !projectKeys.includes(key));
+    // Filter the allProjectKeys to keep only the keys that are not in projects
+    const filteredProjectKeys = allProjectKeys.filter(key => !projectKeys.includes(key));
 
-// Construct a new object containing only the filtered projects
-const filteredProjects = {};
-filteredProjectKeys.forEach(key => {
-    filteredProjects[key] = allProjects[key];
-});
+    // Construct a new object containing only the filtered projects
+    const filteredProjects = {};
+    filteredProjectKeys.forEach(key => {
+      filteredProjects[key] = allProjects[key];
+    });
 
-// Now, filteredProjects will contain only the projects that are not present in the projects
+    // Now, filteredProjects will contain only the projects that are not present in the projects
 
 
 
@@ -385,11 +385,12 @@ app.get('/', async (req, res) => {
 
 
 
-    const tsResult = await tsConnection.query(tsQuery);
+    const tsResult = await executeTsQuery(tsConnection, tsQuery);
+    console.log("TS connection success");
 
     tsResult.forEach((tsRow) => {
       const projCode = `tr_${tsRow.projectcode.toLowerCase()}`;
-      
+
       allProjects[projCode] = `${tsRow.projectcode} - ${tsRow.clientname} - ${tsRow.projectname}`;
     });
 
@@ -398,7 +399,7 @@ app.get('/', async (req, res) => {
 
 
     console.log("TS connection success")
-    
+
 
     //await tsConnection.close();
 
@@ -421,51 +422,62 @@ app.get('/', async (req, res) => {
 
     pdRows.forEach((pdRow) => {
       if (pdRow.Database.includes('tr')) {
-        databases.push(pdRow.Database.toUpperCase().substring(3,pdRow.Database.length));
+        databases.push(pdRow.Database.toUpperCase().substring(3, pdRow.Database.length));
       }
     });
 
-    
-;   
+
+    ;
 
     for (const projCode in allProjects) {
-      if (!databases.includes(projCode.toUpperCase().substring(3,projCode.length))) {
-        projectsWithoutDB.push(projCode.toUpperCase().substring(3,projCode.length));
+      if (!databases.includes(projCode.toUpperCase().substring(3, projCode.length))) {
+        projectsWithoutDB.push(projCode.toUpperCase().substring(3, projCode.length));
       }
     }
 
-  
+
     const matchedObjects = [];
 
-// Iterate through each item in the first array
-databases.forEach(item => {
-  // Find matching object in the second array
-  const matchedObject = tsResult.find(obj => obj.projectcode === item);
-  // If a matching object is found, push it to the matchedObjects array
-  if (matchedObject) {
-    var projCode = "tr_" + matchedObject.projectcode.toLowerCase();
-    projects[projCode] = matchedObject.projectcode + "-" + matchedObject.clientname + "-" + matchedObject.projectname
-    
-  }
-});
+    // Iterate through each item in the first array
+    databases.forEach(item => {
+      // Find matching object in the second array
+      const matchedObject = tsResult.find(obj => obj.projectcode === item);
+      // If a matching object is found, push it to the matchedObjects array
+      if (matchedObject) {
+        var projCode = "tr_" + matchedObject.projectcode.toLowerCase();
+        projects[projCode] = matchedObject.projectcode + "-" + matchedObject.clientname + "-" + matchedObject.projectname
+
+      }
+    });
 
 
-// Get an array of keys from allProjects and projects
-const allProjectKeys = Object.keys(allProjects);
-const projectKeys = Object.keys(projects);
+    // Get an array of keys from allProjects and projects
+    const allProjectKeys = Object.keys(allProjects);
+    const projectKeys = Object.keys(projects);
 
-// Filter the allProjectKeys to keep only the keys that are not in projects
-const filteredProjectKeys = allProjectKeys.filter(key => !projectKeys.includes(key));
+    // Filter the allProjectKeys to keep only the keys that are not in projects
+    const filteredProjectKeys = allProjectKeys.filter(key => !projectKeys.includes(key));
 
-// Construct a new object containing only the filtered projects
-const filteredProjects = {};
-filteredProjectKeys.forEach(key => {
-    filteredProjects[key] = allProjects[key];
-});
+    // Construct a new object containing only the filtered projects
+    const filteredProjects = {};
+    filteredProjectKeys.forEach(key => {
+      filteredProjects[key] = allProjects[key];
+    });
 
-// Now, filteredProjects will contain only the projects that are not present in the projects
+    // Now, filteredProjects will contain only the projects that are not present in the projects
 
+    const reversedProjects = {};
+    const reversedFilteredProjects = {};
 
+    // Reverse the projects object
+    Object.keys(projects).reverse().forEach(key => {
+      reversedProjects[key] = projects[key];
+    });
+
+    // Reverse the filteredProjects object
+    Object.keys(filteredProjects).reverse().forEach(key => {
+      reversedFilteredProjects[key] = filteredProjects[key];
+    });
 
     res.render('index', {
       dbList: projects,
@@ -509,7 +521,7 @@ app.post('/update-transmittal', async (req, res) => {
 
   if (del.length === 0) {
     del = [];
-  
+
   }
   try {
     if (returndate && returndate.trim() !== '') {
@@ -524,8 +536,8 @@ app.post('/update-transmittal', async (req, res) => {
         'INSERT INTO transmittals (docno, docname, issuedate, expretdate, transmitto, herocontact, issuedvia, approval, closeout, construction, information, quotation, tender, remarks) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE docname=VALUES(docname), issuedate=VALUES(issuedate), expretdate=VALUES(expretdate), transmitto=VALUES(transmitto), herocontact=VALUES(herocontact), issuedvia=VALUES(issuedvia), approval=VALUES(approval), closeout=VALUES(closeout), construction=VALUES(construction), information=VALUES(information), quotation=VALUES(quotation), tender=VALUES(tender), remarks=VALUES(remarks)',
         [docno, docname, issuedateFormatted, returndateFormatted, transmitto, herocontact, issuedvia, approval, closeout, construction, information, quotation, tender, remarks]
       );
-	  
-	  
+
+
     } else {
       // If returndate is null or empty, insert '0000-00-00' into the database
       const pdQueryTrUpdate = await pdConnection.query(
@@ -542,82 +554,82 @@ app.post('/update-transmittal', async (req, res) => {
     // Separate the logic for insertions, updates, and deletions
     const insertions = del.filter(x => !td.includes(x));
     const deletions = td.filter(x => !del.includes(x));
-       // Handle insertions
-      console.log("the del are: ", del);
-       console.log("the insertions are:", insertions);
-       console.log("the deletions are:", deletions);
-       for (const item of insertions) {
-        const [doc, reid] = item.split("|");
-        try {
-          // INSERT INTO transdel
-          await pdConnection.query(`INSERT INTO transdel (trandocno, docno, revid) VALUES (?, ?, ?)`, [docno, doc, reid]);
-  
-          // UPDATE revisions with Issue Date
-          await pdConnection.query(`UPDATE revisions SET issuedate=? WHERE id=?`, [issuedateFormatted, reid]);
-  
-          // UPDATE revNew with Issue Date
-          await pdConnection.query(`UPDATE revNew SET issuedate=? WHERE id=?`, [issuedateFormatted, reid]);
-  
-          // Update Expected Return Date if necessary
-          if (construction === 0 && closeout === 0 && information === 0) {
-            console.log("BP1");
-            if (returndate && returndate.trim() !== '') {
-              // Convert returndate to Date object
-              const returndateDate = new Date(returndate);
-        
-              // Format returndate as YYYY-MM-DD
-              const returndateFormatted = returndateDate.toISOString().split('T')[0];
+    // Handle insertions
+    console.log("the del are: ", del);
+    console.log("the insertions are:", insertions);
+    console.log("the deletions are:", deletions);
+    for (const item of insertions) {
+      const [doc, reid] = item.split("|");
+      try {
+        // INSERT INTO transdel
+        await pdConnection.query(`INSERT INTO transdel (trandocno, docno, revid) VALUES (?, ?, ?)`, [docno, doc, reid]);
+
+        // UPDATE revisions with Issue Date
+        await pdConnection.query(`UPDATE revisions SET issuedate=? WHERE id=?`, [issuedateFormatted, reid]);
+
+        // UPDATE revNew with Issue Date
+        await pdConnection.query(`UPDATE revNew SET issuedate=? WHERE id=?`, [issuedateFormatted, reid]);
+
+        // Update Expected Return Date if necessary
+        if (construction === 0 && closeout === 0 && information === 0) {
+          console.log("BP1");
+          if (returndate && returndate.trim() !== '') {
+            // Convert returndate to Date object
+            const returndateDate = new Date(returndate);
+
+            // Format returndate as YYYY-MM-DD
+            const returndateFormatted = returndateDate.toISOString().split('T')[0];
             await pdConnection.query(`UPDATE revisions SET expretdate=? WHERE id=?`, [returndateFormatted, reid]);
             await pdConnection.query(`UPDATE revNew SET expretdate=? WHERE id=?`, [returndateFormatted, reid]);
-          
-          }
-        }
-        } catch (err) {
-          console.error(`Error during insertion: ${err.message}`);
-          // Handle the error as needed
-        }
-      }
 
-      for (const d of td) {
-        console.log("break deletions")
-        const [doc, reid] = d.split("|");
-        try {
-          // UPDATE Existing Revisions with Issue Date
-          await pdConnection.query(`UPDATE revisions SET issuedate='${issuedateFormatted}' WHERE id=${reid}`);
-          await pdConnection.query(`UPDATE revNew SET issuedate='${issuedateFormatted}' WHERE id=${reid}`);
-          
-          // UPDATE Existing Revisions with Expected Return Date
-          if (returndate && returndate.trim() !== '') {
-            const returndateDate = new Date(returndate);
-            const returndateFormatted = returndateDate.toISOString().split('T')[0];
-            await pdConnection.query(`UPDATE revisions SET expretdate='${returndateFormatted}' WHERE id=${reid}`);
-            await pdConnection.query(`UPDATE revNew SET expretdate='${returndateFormatted}' WHERE id=${reid}`);
           }
-        } catch (error) {
-          console.error(`Error: ${error.message}`);
-          // Handle the error as needed
         }
+      } catch (err) {
+        console.error(`Error during insertion: ${err.message}`);
+        // Handle the error as needed
       }
-  
-      // Handle deletions
-      for (const item of deletions) {
-        const [doc, reid] = item.split("|");
-        try {
-          // DELETE FROM transdel
-          await pdConnection.query(`DELETE FROM transdel WHERE trandocno = ? AND docno = ? AND revid = ?`, [docno, doc, reid]);
-  
-          // Reset Issue Date
-          await pdConnection.query(`UPDATE revisions SET issuedate='0000-00-00' WHERE id=?`, [reid]);
-          await pdConnection.query(`UPDATE revNew SET issuedate='0000-00-00' WHERE id=?`, [reid]);
-  
-          // Reset Expected Return Date
-          await pdConnection.query(`UPDATE revisions SET expretdate='0000-00-00' WHERE id=?`, [reid]);
-          await pdConnection.query(`UPDATE revNew SET expretdate='0000-00-00' WHERE id=?`, [reid]);
-        } catch (err) {
-          console.error(`Error during deletion: ${err.message}`);
-          // Handle the error as needed
+    }
+
+    for (const d of td) {
+      console.log("break deletions")
+      const [doc, reid] = d.split("|");
+      try {
+        // UPDATE Existing Revisions with Issue Date
+        await pdConnection.query(`UPDATE revisions SET issuedate='${issuedateFormatted}' WHERE id=${reid}`);
+        await pdConnection.query(`UPDATE revNew SET issuedate='${issuedateFormatted}' WHERE id=${reid}`);
+
+        // UPDATE Existing Revisions with Expected Return Date
+        if (returndate && returndate.trim() !== '') {
+          const returndateDate = new Date(returndate);
+          const returndateFormatted = returndateDate.toISOString().split('T')[0];
+          await pdConnection.query(`UPDATE revisions SET expretdate='${returndateFormatted}' WHERE id=${reid}`);
+          await pdConnection.query(`UPDATE revNew SET expretdate='${returndateFormatted}' WHERE id=${reid}`);
         }
+      } catch (error) {
+        console.error(`Error: ${error.message}`);
+        // Handle the error as needed
       }
+    }
+
+    // Handle deletions
+    for (const item of deletions) {
+      const [doc, reid] = item.split("|");
+      try {
+        // DELETE FROM transdel
+        await pdConnection.query(`DELETE FROM transdel WHERE trandocno = ? AND docno = ? AND revid = ?`, [docno, doc, reid]);
+
+        // Reset Issue Date
+        await pdConnection.query(`UPDATE revisions SET issuedate='0000-00-00' WHERE id=?`, [reid]);
+        await pdConnection.query(`UPDATE revNew SET issuedate='0000-00-00' WHERE id=?`, [reid]);
+
+        // Reset Expected Return Date
+        await pdConnection.query(`UPDATE revisions SET expretdate='0000-00-00' WHERE id=?`, [reid]);
+        await pdConnection.query(`UPDATE revNew SET expretdate='0000-00-00' WHERE id=?`, [reid]);
+      } catch (err) {
+        console.error(`Error during deletion: ${err.message}`);
+        // Handle the error as needed
+      }
+    }
 
 
     const pdquery_tr = "(SELECT t.docno AS trno, t.docname AS trname, IF(complete = 1 OR t.returndate != '0000-00-00' AND cancelled = 0, 1, 0) as complete, t.cancelled, IF(t.expretdate <= curdate() AND t.returndate = '0000-00-00' AND complete = 0 AND cancelled = 0, 1, 0) AS overdue, t.issuedate, t.expretdate, t.returndate, t.transmitto, t.herocontact, t.issuedvia, t.approval, t.closeout, t.construction, t.information, t.quotation, t.tender, t.remarks, GROUP_CONCAT(td.docno SEPARATOR '<br>') AS docno, GROUP_CONCAT(d.docname SEPARATOR '<br>') as docname, GROUP_CONCAT(CONCAT(r.revid,IFNULL(r.subrev,'')) SEPARATOR '<br>') AS rev FROM ((transmittals AS t LEFT JOIN transdel AS td ON t.docno = td.trandocno) LEFT JOIN deliverables AS d ON d.docno=td.docno) LEFT JOIN revisions AS r ON td.revid = r.id GROUP BY t.docno ORDER BY overdue DESC, complete ASC, cancelled ASC, issuedate DESC)";
@@ -715,7 +727,7 @@ app.post('/update-transmittal', async (req, res) => {
 app.post('/createDatabase', async (req, res) => {
   const newproj = req.body.newproj;
   let values = [];
-  let tables =[];
+  let tables = [];
   if (newproj) {
     try {
       // Create the new database
@@ -732,7 +744,7 @@ app.post('/createDatabase', async (req, res) => {
         const queryTables = dbinit[tableName];
         tables = await pdConnection.query(queryTables);
         // Execute the query here
-        
+
 
       }
       const defaultValues = Object.keys(tblinit);
@@ -740,11 +752,11 @@ app.post('/createDatabase', async (req, res) => {
         const queryValues = tblinit[defaultValue];
         values = await pdConnection.query(queryValues);
         // Execute the query here
-        
+
       }
-      
+
       // Return a success message
-      res.status(200).json({ database: newproj ,tables:tableNames, values:defaultValues, message: 'Database and tables created successfully' });
+      res.status(200).json({ database: newproj, tables: tableNames, values: defaultValues, message: 'Database and tables created successfully' });
     } catch (error) {
       // Log the error
       console.error(error);
@@ -1029,7 +1041,7 @@ app.post('/save-new-deliverable', async (req, res) => {
 
     const updatedDeliverablesQuery = "SELECT * FROM deliverables LEFT JOIN (SELECT rev.docno, revisions.id as revid, rev.revid as rev, revisions.revdate, max(revisions.subrev) as subrev, revisions.revdesc, revisions.schedate, revisions.issuedate, revisions.expretdate, revisions.returndate, IF(revisions.returndate <> '0000-00-00', 1, 0) AS complete, IF((revisions.expretdate <= curdate() AND revisions.returndate = '0000-00-00' AND revisions.expretdate <> '0000-00-00') OR (revisions.schedate <= curdate() AND revisions.issuedate = '0000-00-00'	 AND revisions.schedate <> '0000-00-00'), 1, 0) AS overdue FROM (SELECT DISTINCT docno, max(id) as id, max(revid) AS revid	FROM revisions GROUP BY docno) AS rev LEFT JOIN revisions USING (docno, id) GROUP BY rev.docno) AS r USING (docno)";
     const [updatedDeliverables] = await pdConnection.query(updatedDeliverablesQuery);
-    
+
     const ModifiedupdatedDeliverables = updatedDeliverables.map((deliverable) => {
       deliverable.rev = String(deliverable.rev).substring(0, 1);
       deliverable.rev = rev(parseInt(deliverable.rev));
@@ -1265,14 +1277,14 @@ app.post('/add-transmittal', async (req, res) => {
           if (returndate && returndate.trim() !== '') {
             // Convert returndate to Date object
             const returndateDate = new Date(returndate);
-      
+
             // Format returndate as YYYY-MM-DD
             const returndateFormatted = returndateDate.toISOString().split('T')[0];
-          await pdConnection.query(`UPDATE revisions SET expretdate=? WHERE id=?`, [returndateFormatted, reid]);
-          await pdConnection.query(`UPDATE revNew SET expretdate=? WHERE id=?`, [returndateFormatted, reid]);
-        
+            await pdConnection.query(`UPDATE revisions SET expretdate=? WHERE id=?`, [returndateFormatted, reid]);
+            await pdConnection.query(`UPDATE revNew SET expretdate=? WHERE id=?`, [returndateFormatted, reid]);
+
+          }
         }
-      }
       } catch (err) {
         console.error(`Error during insertion: ${err.message}`);
         // Handle the error as needed
@@ -1403,10 +1415,10 @@ app.post('/new-transmittal-details', async (req, res) => {
         return tsDetails_row;
       });
     }
-    
+
     const tsDetailsDelQuery = "SELECT * FROM deliverables LEFT JOIN (SELECT rev.docno, revisions.id as revid, rev.revid as rev, revisions.revdate, max(revisions.subrev) as subrev, revisions.revdesc, revisions.issuedate, revisions.returndate FROM (SELECT DISTINCT docno, max(id) AS id, max(revid) AS revid FROM revisions GROUP BY docno) AS rev LEFT JOIN revisions USING (docno, id) GROUP BY rev.docno) AS r USING (docno) WHERE issuedate = '0000-00-00' and returndate = '0000-00-00'"
     const tsDetailsDelQueryResult = await pdConnection.query(tsDetailsDelQuery);
-    
+
     const trIssued_Addel = tsDetailsDelQueryResult[0].map(trIssued => {
       trIssued.rev = rev(parseInt(trIssued.rev));
       trIssued.rev = trIssued.subrev !== null && trIssued.subrev !== ' ' ? trIssued.rev[0] + "." + trIssued.subrev : trIssued.rev[0];
@@ -1463,271 +1475,271 @@ app.post('/update-deliverable', async (req, res) => {
 
 
 app.post('/view-pdf', async (req, res) => {
-    const docno = req.body.docno;
-    const projno = req.body.projdb;
-    const units = 2.85;
-    try {
-        const existingPdfBytes = await fs.readFile("public/transmittal-template.pdf");
-        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+  const docno = req.body.docno;
+  const projno = req.body.projdb;
+  const units = 2.85;
+  try {
+    const existingPdfBytes = await fs.readFile("public/transmittal-template.pdf");
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-        // Register fontkit instance
-        pdfDoc.registerFontkit(fontkit);
+    // Register fontkit instance
+    pdfDoc.registerFontkit(fontkit);
 
-        // Embed custom font
-        const fontBytes = await fs.readFile("public/font/times new roman.ttf");
-        const customFont = await pdfDoc.embedFont(fontBytes);
-        const page = pdfDoc.getPages()[0]; 
-        const height = page.getSize().height;
-        const width = page.getSize().width;
-        
-        const pdquery = await pdConnection.query(`SELECT t.docno AS trno, t.docname AS trname, t.issuedate, t.expretdate, t.returndate, t.transmitto, t.herocontact, t.issuedvia, t.approval, t.closeout, t.construction, t.information, t.quotation, t.tender, t.remarks, td.docno AS docno, d.clientno AS clientno, d.docname AS docname, CONCAT(r.revid,IFNULL(r.subrev,'')) AS rev, td.revid AS revid FROM ((transmittals AS t LEFT JOIN transdel AS td ON t.docno = td.trandocno) LEFT JOIN deliverables AS d ON d.docno=td.docno) LEFT JOIN revisions AS r ON td.revid = r.id WHERE t.docno = '${docno}'`);
-        console.log(pdquery);
-        for (let index = 0; index < pdquery[0].length; index++) {
-            const modification = pdquery[0][index];
-            const pageIdx = index%24;
-            
-            if (modification && typeof modification === "object") {
-                    
-                if (pageIdx === 0) {
-                    
-                    
-                    page.setFont(customFont);
-                    pdfDoc.setTitle(projno.replace(/"/g, '').toUpperCase() + "-" + modification.trno);
-                    pdfDoc.setAuthor(modification.herocontact);
-                    pdfDoc.setSubject(
-                        "Transmittal " +
-                        modification.trno +
-                        " to " +
-                        modification.transmitto +
-                        " via " +
-                        modification.issuedvia +
-                        " on " +
-                        modification.issuedate.replace(/-/g, "/")
-                    );
-                    pdfDoc.setCreator("Hero Engineering Project Database");
+    // Embed custom font
+    const fontBytes = await fs.readFile("public/font/times new roman.ttf");
+    const customFont = await pdfDoc.embedFont(fontBytes);
+    const page = pdfDoc.getPages()[0];
+    const height = page.getSize().height;
+    const width = page.getSize().width;
 
-                    if (modification.cancelled === 1 && modification.cancelled) {
-                        page.drawText("CANCELLED", {
-                            x: 0,
-                            y: 0,
-                            size: 32,
-                            font: customFont,
-                            color: rgb(255, 0, 0),
-                        });
-                    }
-                    
-                    
-                    page.drawText("Page " + (index + 1) + " of " + pdquery[0].length, {
-                        x: (width/2)*units,
-                        y: 50*units,
-                        size: 8,
-                        font: customFont,
-                        color: rgb(0, 0, 0),
-                        
-                    });
-                    page.drawText(projno.replace(/"/g, '').substring(3,projno.replace(/"/g, '').length).toUpperCase() + "-" + modification.trno.toUpperCase(), {
-                        x: 110*units,
-                        y: (height - 43*units),
-                        size: 8,
-                        font: customFont,
-                        color: rgb(0, 0, 0),
-                        
-                    });
+    const pdquery = await pdConnection.query(`SELECT t.docno AS trno, t.docname AS trname, t.issuedate, t.expretdate, t.returndate, t.transmitto, t.herocontact, t.issuedvia, t.approval, t.closeout, t.construction, t.information, t.quotation, t.tender, t.remarks, td.docno AS docno, d.clientno AS clientno, d.docname AS docname, CONCAT(r.revid,IFNULL(r.subrev,'')) AS rev, td.revid AS revid FROM ((transmittals AS t LEFT JOIN transdel AS td ON t.docno = td.trandocno) LEFT JOIN deliverables AS d ON d.docno=td.docno) LEFT JOIN revisions AS r ON td.revid = r.id WHERE t.docno = '${docno}'`);
 
-                    page.drawText(modification.issuedate.replace(/-/g,'/'), {
-                      x: 110*units,
-                      y: height-51*units,
-                      size: 8,
-                      font: customFont,
-                      color: rgb(0, 0, 0),
-                      width: 75,
-                    });
-                    page.drawText(modification.transmitto, {
-                      x: 24*units,
-                      y: height-63*units,
-                      size: 8,
-                      font: customFont,
-                      color: rgb(0, 0, 0),
-                      lineHeight: 4.225,
-                      width: 79,
-                    });
+    for (let index = 0; index < pdquery[0].length; index++) {
+      const modification = pdquery[0][index];
+      const pageIdx = index % 24;
 
-                    page.drawText(modification.herocontact, {
-                      x: 103.5*units,
-                      y: height - 65*units,
-                      size: 8,
-                      font: customFont,
-                      color: rgb(0, 0, 0),
-                    });
+      if (modification && typeof modification === "object") {
 
-                    page.drawText(modification.issuedvia, {
-                      x: 24*units,
-                      y: height - 87*units,
-                      size: 8,
-                      font: customFont,
-                      color: rgb(0, 0, 0),
-                      lineHeight: 4.225,
-                    });
+        if (pageIdx === 0) {
 
-                    if (modification.approval === 1) {
-                  page.drawText("X", {
-                        x: 105*units,
-                        y: height - 90*units,
-                        size: 8,
-                        font: customFont,
-                        color: rgb(0, 0, 0),
-                      });
-                    }
-                    if (modification.closeout === 1) {
-                  page.drawText("X", {
-                        x: 132*units,
-                        y: height-90*units,
-                        size: 8,
-                        font: customFont,
-                        color: rgb(0, 0, 0),
-                      });
-                    }
-                    if (modification.construction === 1) {
-                  page.drawText("X", {
-                        x: 157*units,
-                        y: height-90*units,
-                        size: 8,
-                        font: customFont,
-                        color: rgb(0, 0, 0),
-                      });
-                    }
-                    if (modification.information === 1) {
-                  page.drawText("X", {
-                        x: 105*units,
-                        y: height-96*units,
-                        size: 8,
-                        font: customFont,
-                        color: rgb(0, 0, 0),
-                      });
-                    }
-                    if (modification.quotation === 1) {
-                  page.drawText("X", {
-                        x: 132*units,
-                        y: height-96*units,
-                        size: 8,
-                        font: customFont,
-                        color: rgb(0, 0, 0),
-                      });
-                    }
-                    if (modification.tender === 1) {
-                  page.drawText("X", {
-                        x: 157*units,
-                        y: height-96*units,
-                        size: 8,
-                        font: customFont,
-                        color: rgb(0, 0, 0),
-                      });
-                    }
 
-                  const remarksText = "Respond by: " + modification.expretdate.replace(/-/g, "/");
-                  page.drawText(remarksText, {
-                    x: 24*units,
-                    y: height- 219*units,
-                    size: 8,
-                    font: customFont,
-                    color: rgb(0, 0, 0),
-                  }); 
-                }
-                  
-                  const v = [
-                    modification.rev,
-                    modification.revid,
-                    modification.docname,
-                  ];
-                  const k =
-                    modification.clientno !== null && modification.clientno !== ''
-                      ? modification.clientno
-                      : projno.replace(/"/g, '').toUpperCase().substring(3,projno.replace(/"/g, '').toUpperCase().length) + "-" + (modification.docno !== null && modification.docno !== ''?modification.docno:'');
-                  const j = 111 + index * 4.225;
-        
-                  page.drawText(String(index + 1), {
-                    x: 30*units,
-                    y: height- j*units,
-                    size: 7,
-                    font: customFont,
-                    color: rgb(0, 0, 0),
-                    textAlign: 'center'
-                  });
-        
-                  page.drawText(k, {
-                    x: 50*units,
-                    y: height- j*units,
-                    size: 7,
-                    font: customFont,
-                    color: rgb(0, 0, 0),
-                    textAlign: 'center'
-                  });
+          page.setFont(customFont);
+          pdfDoc.setTitle(projno.replace(/"/g, '').toUpperCase() + "-" + modification.trno);
+          pdfDoc.setAuthor(modification.herocontact);
+          pdfDoc.setSubject(
+            "Transmittal " +
+            modification.trno +
+            " to " +
+            modification.transmitto +
+            " via " +
+            modification.issuedvia +
+            " on " +
+            modification.issuedate.replace(/-/g, "/")
+          );
+          pdfDoc.setCreator("Hero Engineering Project Database");
 
-   
-                  page.drawText(v[0] !== '' && v[0] !== null? rev(parseInt(v[0].substring(0,1)))[0] + v[0].substring(1): '-', {
-                    x: 90*units,
-                    y: height- j*units,
-                    size: 7,
-                    font: customFont,
-                    color: rgb(0, 0, 0),
-                    textAlign: 'center'
-                  });
-        
-                  const fontSize = 32;
-                  if(v[2] !== '' && v[2] !== null){
-                    if (v[2].length > 83) {
-                      page.drawText(
-                        "..." + v[2].substring(0, v[2].length - 39),
-                        {
-                          x: 104.5*units,
-                          y: height- j*units,
-                          size: 7,
-                          font: customFont,
-                          color: rgb(0, 0, 0),
-                          textAlign: 'center'
-                        }
-                      );
-                    } else {
-                      page.drawText(v[2], {
-                        x: 104.5*units,
-                        y: height- j*units,
-                        size: 7,
-                        font: customFont,
-                        color: rgb(0, 0, 0),
-                        textAlign: 'center'
-                      });
-  
-                    }
-                  }else{
-                    page.drawText("-", {
-                      x: 104.5*units,
-                      y: height- j*units,
-                      size: 7,
-                      font: customFont,
-                      color: rgb(0, 0, 0),
-                      textAlign: 'center'
-                    });
+          if (modification.cancelled === 1 && modification.cancelled) {
+            page.drawText("CANCELLED", {
+              x: 0,
+              y: 0,
+              size: 32,
+              font: customFont,
+              color: rgb(255, 0, 0),
+            });
+          }
 
-                  }
-                  
 
-                }
-            
+          page.drawText("Page " + (index + 1) + " of " + "1", {
+            x: (width / 2) * units,
+            y: 50 * units,
+            size: 8,
+            font: customFont,
+            color: rgb(0, 0, 0),
+
+          });
+          page.drawText(projno.replace(/"/g, '').substring(3, projno.replace(/"/g, '').length).toUpperCase() + "-" + modification.trno.toUpperCase(), {
+            x: 110 * units,
+            y: (height - 43 * units),
+            size: 8,
+            font: customFont,
+            color: rgb(0, 0, 0),
+
+          });
+
+          page.drawText(modification.issuedate.replace(/-/g, '/'), {
+            x: 110 * units,
+            y: height - 51 * units,
+            size: 8,
+            font: customFont,
+            color: rgb(0, 0, 0),
+            width: 75,
+          });
+          page.drawText(modification.transmitto, {
+            x: 24 * units,
+            y: height - 63 * units,
+            size: 8,
+            font: customFont,
+            color: rgb(0, 0, 0),
+            lineHeight: 4.225,
+            width: 79,
+          });
+
+          page.drawText(modification.herocontact, {
+            x: 103.5 * units,
+            y: height - 65 * units,
+            size: 8,
+            font: customFont,
+            color: rgb(0, 0, 0),
+          });
+
+          page.drawText(modification.issuedvia, {
+            x: 24 * units,
+            y: height - 87 * units,
+            size: 8,
+            font: customFont,
+            color: rgb(0, 0, 0),
+            lineHeight: 4.225,
+          });
+
+          if (modification.approval === 1) {
+            page.drawText("X", {
+              x: 105 * units,
+              y: height - 90 * units,
+              size: 8,
+              font: customFont,
+              color: rgb(0, 0, 0),
+            });
+          }
+          if (modification.closeout === 1) {
+            page.drawText("X", {
+              x: 132 * units,
+              y: height - 90 * units,
+              size: 8,
+              font: customFont,
+              color: rgb(0, 0, 0),
+            });
+          }
+          if (modification.construction === 1) {
+            page.drawText("X", {
+              x: 157 * units,
+              y: height - 90 * units,
+              size: 8,
+              font: customFont,
+              color: rgb(0, 0, 0),
+            });
+          }
+          if (modification.information === 1) {
+            page.drawText("X", {
+              x: 105 * units,
+              y: height - 96 * units,
+              size: 8,
+              font: customFont,
+              color: rgb(0, 0, 0),
+            });
+          }
+          if (modification.quotation === 1) {
+            page.drawText("X", {
+              x: 132 * units,
+              y: height - 96 * units,
+              size: 8,
+              font: customFont,
+              color: rgb(0, 0, 0),
+            });
+          }
+          if (modification.tender === 1) {
+            page.drawText("X", {
+              x: 157 * units,
+              y: height - 96 * units,
+              size: 8,
+              font: customFont,
+              color: rgb(0, 0, 0),
+            });
+          }
+
+          const remarksText = "Respond by: " + modification.expretdate.replace(/-/g, "/");
+          page.drawText(remarksText, {
+            x: 24 * units,
+            y: height - 219 * units,
+            size: 8,
+            font: customFont,
+            color: rgb(0, 0, 0),
+          });
         }
 
-        // Serialize the modified PDF document to bytes
-        const modifiedPdfBytes = await pdfDoc.save();
+        const v = [
+          modification.rev,
+          modification.revid,
+          modification.docname,
+        ];
+        const k =
+          modification.clientno !== null && modification.clientno !== ''
+            ? modification.clientno
+            : projno.replace(/"/g, '').toUpperCase().substring(3, projno.replace(/"/g, '').toUpperCase().length) + "-" + (modification.docno !== null && modification.docno !== '' ? modification.docno : '');
+        const j = 111 + index * 4.225;
 
-        // Set the response headers for downloading
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="transmittal-${docno}.pdf"`);
+        page.drawText(String(index + 1), {
+          x: 30 * units,
+          y: height - j * units,
+          size: 7,
+          font: customFont,
+          color: rgb(0, 0, 0),
+          textAlign: 'center'
+        });
 
-        // Send the modified PDF bytes for download
-        res.end(modifiedPdfBytes, 'binary');
-    } catch (error) {
-        console.error(`Error: ${error.message}`);
-        res.status(500).send('Internal Server Error');
+        page.drawText(k, {
+          x: 50 * units,
+          y: height - j * units,
+          size: 7,
+          font: customFont,
+          color: rgb(0, 0, 0),
+          textAlign: 'center'
+        });
+
+
+        page.drawText(v[0] !== '' && v[0] !== null ? rev(parseInt(v[0].substring(0, 1)))[0] + v[0].substring(1) : '-', {
+          x: 90 * units,
+          y: height - j * units,
+          size: 7,
+          font: customFont,
+          color: rgb(0, 0, 0),
+          textAlign: 'center'
+        });
+
+        const fontSize = 32;
+        if (v[2] !== '' && v[2] !== null) {
+          if (v[2].length > 83) {
+            page.drawText(
+              "..." + v[2].substring(0, v[2].length - 39),
+              {
+                x: 104.5 * units,
+                y: height - j * units,
+                size: 7,
+                font: customFont,
+                color: rgb(0, 0, 0),
+                textAlign: 'center'
+              }
+            );
+          } else {
+            page.drawText(v[2], {
+              x: 104.5 * units,
+              y: height - j * units,
+              size: 7,
+              font: customFont,
+              color: rgb(0, 0, 0),
+              textAlign: 'center'
+            });
+
+          }
+        } else {
+          page.drawText("-", {
+            x: 104.5 * units,
+            y: height - j * units,
+            size: 7,
+            font: customFont,
+            color: rgb(0, 0, 0),
+            textAlign: 'center'
+          });
+
+        }
+
+
+      }
+
     }
+
+    // Serialize the modified PDF document to bytes
+    const modifiedPdfBytes = await pdfDoc.save();
+
+    // Set the response headers for downloading
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="transmittal-${docno}.pdf"`);
+
+    // Send the modified PDF bytes for download
+    res.end(modifiedPdfBytes, 'binary');
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 

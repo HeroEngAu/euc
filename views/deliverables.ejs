@@ -1242,8 +1242,9 @@
                             contentType: 'application/json',
                             data: params,
                             success: function(data) {
-                                console.log(data.transmittals);
+                                
                                 updateTrTable(data.transmittals);
+                                data.deliverables.sort((a, b) => a.docno.localeCompare(b.docno));
                                 addRowsToTable(data.deliverables);
                                 closeAddTransmittal();
                             },
@@ -1348,6 +1349,7 @@
                             success: function (data) {
                              
                                 updateTrTable(data.transmittals);
+                                data.deliverables.sort((a, b) => a.docno.localeCompare(b.docno));
                                 addRowsToTable(data.deliverables);
                                 closeTransmittalModal();
                                 
@@ -2014,6 +2016,7 @@
                             data: params,
                             success: function (data) {
                                 //Update Front End with the New Revision
+                                data.deliverables.sort((a, b) => a.docno.localeCompare(b.docno));
                                 addRowsToTable(data.deliverables);
                                 attachClickableRowEvent();
                                 attachEventListenerPDF();
@@ -2074,7 +2077,9 @@
                         data: params,
                         timeout:15000,
                         success: function (data) {
-                            //Update Front End with the New Revision
+                            //Order the deliverables in descending order using docno
+                            data.deliverables.sort((a, b) => a.docno.localeCompare(b.docno));
+                            //Update Front End with the Updated Deliverables
                             addRowsToTable(data.deliverables);
                             //update click event for clickable rows
                             attachClickableRowEvent();
@@ -2121,6 +2126,8 @@
                         contentType: 'application/json',
                         data: params,
                         success: function (data) {
+
+                            data.deliverables.sort((a, b) => a.docno.localeCompare(b.docno));
                             addRowsToTable(data.deliverables);
                             attachClickableRowEvent();
                             
@@ -2181,7 +2188,7 @@
                         contentType: "application/json",
                         data: JSON.stringify({ sheets: Sheets, docno: DocNo, docname: DocName, safety: Safety, clientno: ClientNo }),
                         success: function (data) {
-                            
+                            data.deliverables.sort((a, b) => a.docno.localeCompare(b.docno));
                             //update click event for clickable rows
                             addRowsToTable(data.deliverables);
                             attachClickableRowEvent();
