@@ -1,0 +1,441 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>Hero Engineering EUC Modification Log</title>
+		<link rel="stylesheet" type="text/css" href="./themes/hero/easyui.css">
+		<link rel="stylesheet" type="text/css" href="./themes/icon.css">
+		<link rel="stylesheet" type="text/css" href="./demo/demo.css">
+		<script type="text/javascript" src="jquery-1.8.0.min.js"></script>
+		<script type="text/javascript" src="jquery.easyui.min.js"></script>
+		<script type="text/javascript" src="jquery.edatagrid.js"></script>
+	</head>
+	<body class="easyui-layout">
+		<div data-options="region:'north',border:false" style="height:60px">
+			<div id="header" style="font: 3em Arial, Helvetica, sans-serif; padding: 7px; width: 90%;">EUC Modification Log
+				<a href="http://dbserver/"><img class="logo" border="0" src="logo.gif"></a>
+			</div>
+		</div>
+		<div data-options="region:'west',border:false" style="width:100px">
+		</div>
+		<div data-options="region:'center',border:false" style="width:600px" title="Equipment List">
+			<div id="euc-tb">
+				<a id="add" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" style="float: left;">Add</a>
+				<a href="#" id="edit" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true,disabled:true" style="float: left;">Edit</a>
+				<div class="datagrid-btn-separator"></div>
+				<div class="datagrid-btn-separator"></div>
+				<div class="datagrid-btn-separator"></div>
+				<div class="datagrid-btn-separator"></div>
+				<a id="save" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true,disabled:true" style="float: left;">Save</a>
+				<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,disabled:true" style="float: left;">Cancel</a>
+			</div>
+			<table id="euc"></table>
+		</div>
+		<div id="properties" data-options="region:'east'" style="width:400px" title="Properties">
+			<div id="aa" class="easyui-accordion" style="height:400px;">  
+				<div title="Previous Owners" data-options="iconCls:'icon-search',selected:true" style="">  
+					<div id="owners-tb">
+						<a id="add" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" style="float: left;">Add</a>
+						<a href="#" id="edit" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true,disabled:true" style="float: left;">Edit</a>
+						<div class="datagrid-btn-separator"></div>
+						<div class="datagrid-btn-separator"></div>
+						<div class="datagrid-btn-separator"></div>
+						<div class="datagrid-btn-separator"></div>
+						<a id="save" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true,disabled:true" style="float: left;">Save</a>
+						<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,disabled:true" style="float: left;">Cancel</a>
+					</div>
+					<table id="owners"></table>
+				</div>  
+				<div title="Related Documents" data-options="iconCls:'icon-edit'" style="">  
+					<div id="document-tb">
+						<a id="add" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" style="float: left;">Add</a>
+						<a href="#" id="edit" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true,disabled:true" style="float: left;">Edit</a>
+						<div class="datagrid-btn-separator"></div>
+						<div class="datagrid-btn-separator"></div>
+						<div class="datagrid-btn-separator"></div>
+						<div class="datagrid-btn-separator"></div>
+						<a id="save" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true,disabled:true" style="float: left;">Save</a>
+						<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,disabled:true" style="float: left;">Cancel</a>
+					</div>
+					<table id="document"></table>
+				</div>
+				<div title="MRQ Helpdesk Tickets & Checksums" data-options="iconCls:'icon-help'">  
+					<div id="mrq-tb">
+						<a id="add" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true,disabled:true" style="float: left;">Add</a>
+						<a href="#" id="edit" class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true,disabled:true" style="float: left;">Edit</a>
+						<div class="datagrid-btn-separator"></div>
+						<div class="datagrid-btn-separator"></div>
+						<div class="datagrid-btn-separator"></div>
+						<div class="datagrid-btn-separator"></div>
+						<a id="save" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true,disabled:true" style="float: left;">Save</a>
+						<a id="cancel" class="easyui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,disabled:true" style="float: left;">Cancel</a>
+					</div>
+					<table id="mrq"></table>
+				</div>  
+			</div>  
+		</div>
+	</body>
+	<script>
+		$(function() {
+		});
+
+		$.fn.datebox.defaults.formatter = function(date){
+			var y = date.getFullYear();
+			var m = date.getMonth()+1;
+			var d = date.getDate();
+			if (m < 10) {
+				m = '0'+m;
+			}
+			if (d < 10) {
+				d = '0'+d;
+			}
+			return d+'-'+m+'-'+y;
+		}
+
+		// ****************************************************************************************************************
+		// EUC Datagrid
+		// ****************************************************************************************************************
+		$('#euc-tb #add').click(function() {
+			$('#euc').edatagrid('addRow');
+			
+			var row = $('#euc').edatagrid('getSelected');
+			var index = $('#euc').datagrid('getRowIndex', row);
+			$('#euc').edatagrid('mergeCells',{index:index,field:'projectcode',rowspan:1,colspan:3});
+			
+			var ed = $('#euc').datagrid('getEditor', {index:index,field:'projectcode'});
+			$(ed.target).combobox('resize', 400);
+			
+			$('#euc-tb #save').linkbutton('enable');
+			$('#euc-tb #cancel').linkbutton('enable');
+		});
+
+
+		$('#euc-tb #edit').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				var row = $('#euc').edatagrid('getSelected');
+				var index = $('#euc').datagrid('getRowIndex', row);
+				
+				$('#euc').edatagrid('editRow', index);
+				$('#euc').edatagrid('mergeCells',{index:index,field:'projectcode',rowspan:1,colspan:3});
+				
+				var ed = $('#euc').datagrid('getEditor', {index:index,field:'projectcode'});
+				$(ed.target).combobox('resize', 400);
+				$('#euc-tb #save').linkbutton('enable');
+				$('#euc-tb #cancel').linkbutton('enable');
+			}
+		});
+
+		$('#euc-tb #save').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				$('#euc').edatagrid('saveRow');
+				$('#euc-tb #edit').linkbutton('disable');
+				$('#euc-tb #save').linkbutton('disable');
+				$('#euc-tb #cancel').linkbutton('disable');
+				$('#euc').datagrid('reload');
+			}
+		});
+
+		$('#euc-tb #cancel').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				$('#euc').edatagrid('cancelRow');
+				$('#euc-tb #edit').linkbutton('disable');
+				$('#euc-tb #save').linkbutton('disable');
+				$('#euc-tb #cancel').linkbutton('disable');
+				$('#euc').datagrid('reload');
+			}
+		});
+
+		$('#euc').edatagrid({
+			url:	'getEUC.php',
+			saveUrl: 'saveEUC.php',
+			updateUrl: 'updateEUC.php',
+			singleSelect:true,
+			fit:true,
+			fitColumns:true,
+			rownumbers:true,
+			toolbar: '#euc-tb',
+			columns:[[
+			{field:'eucid', title:'EUC ID', hidden:'true'},
+			{field:'projectid', title:'Project ID', hidden:'true'},
+			{field:'eucdesc', title:'EUC Description', width:10, 
+				editor:{
+					type:'validatebox',
+					options:{required:true}
+			}},
+			{field:'projectcode',title:'Project Code', width:10,
+				editor:{
+					id:'proj',
+					type:'combobox',
+					options:{valueField:'projectid',textField:'projectcode',url:'getProjectCode.php',required:true}
+			}},
+			{field:'clientname',title:'Client'},
+			{field:'projectname',title:'Project Name'},
+			{field:'datedecom',title:'Decommission Date',
+				editor:{
+					type:'datebox',
+					options:{}
+			}}
+			]],
+			onClickRow: function(index, row) {
+				$('#properties').panel('setTitle', 'Properties - ' + row.eucdesc);
+				$('#owners').datagrid('load', {eucid:	row.eucid});
+				$('#document').datagrid('load', {eucid:	row.eucid, projectcode: row.projectcode});
+				$('#mrq').datagrid('load', {projectid:	row.projectid});
+				$('#euc-tb #edit').linkbutton('enable');
+			}
+		});
+
+		// ****************************************************************************************************************
+		// Owners Datagrid
+		// ****************************************************************************************************************
+		$('#owners-tb #add').click(function() {
+			$('#owners').edatagrid('addRow');
+			$('#owners-tb #save').linkbutton('enable');
+			$('#owners-tb #cancel').linkbutton('enable');
+		});
+
+		$('#owners-tb #edit').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				var row = $('#owners').edatagrid('getSelected');
+				var index = $('#owners').datagrid('getRowIndex', row);
+				$('#owners').edatagrid('editRow', index);
+				$('#owners-tb #save').linkbutton('enable');
+				$('#owners-tb #cancel').linkbutton('enable');
+			}
+		});
+
+		$('#owners-tb #save').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				var row = $('#owners').edatagrid('getSelected');
+				var index = $('#owners').datagrid('getRowIndex', row);
+				var eucid = $('#euc').edatagrid('getSelected').eucid;
+				var ed1 = $('#owners').datagrid('getEditor',{index:index,field:'ownerdesc'});
+				var ed2 = $('#owners').datagrid('getEditor',{index:index,field:'dateowned'});
+				var ownerdesc = $(ed1.target).val();
+				var dateowned = $(ed2.target).datebox('getValue');
+
+				$('#owners').datagrid('updateRow',{index:index,row:{eucid:eucid, ownerdesc:ownerdesc, dateowned:dateowned}});
+				$('#owners').edatagrid('saveRow');
+				$('#owners-tb #edit').linkbutton('disable');
+				$('#owners-tb #save').linkbutton('disable');
+				$('#owners-tb #cancel').linkbutton('disable');
+				$('#owners').datagrid('reload');
+			}
+		});
+
+		$('#owners-tb #cancel').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				$('#owners').edatagrid('cancelRow');
+				$('#owners-tb #edit').linkbutton('disable');
+				$('#owners-tb #save').linkbutton('disable');
+				$('#owners-tb #cancel').linkbutton('disable');
+				$('#owners').datagrid('reload');
+			}
+		});
+
+		$('#owners').edatagrid({
+			url:	'getOwners.php',
+			saveUrl: 'saveOwners.php',
+			updateUrl: 'updateOwners.php',
+			singleSelect:true,
+			fit:true,
+			toolbar: '#owners-tb',
+			columns:[[
+			{field:'eucid', title:'EUC ID', hidden:'true'},
+			{field:'ownerid', title:'Owner ID', hidden:'true'},
+			{field:'ownerdesc', title:'Owner', width:200, 
+				editor:{
+					type:'validatebox',
+					options:{required:true}
+			}},
+			{field:'dateowned',title:'Date Owned', width:194,
+				editor:{
+					type:'datebox',
+					options:{required:true}
+			}}
+			]],
+			onClickRow: function(index, row) {
+				$('#owners-tb #edit').linkbutton('enable');
+			}
+
+		});
+
+		// ****************************************************************************************************************
+		// Document Data Grid
+		// ****************************************************************************************************************
+		$('#document-tb #add').click(function() {
+			$('#document').edatagrid('addRow');
+			$('#document-tb #save').linkbutton('enable');
+			$('#document-tb #cancel').linkbutton('enable');
+		});
+
+		$('#document-tb #edit').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				var row = $('#document').edatagrid('getSelected');
+				var index = $('#document').datagrid('getRowIndex', row);
+				$('#document').edatagrid('editRow', index);
+				$('#document').edatagrid('mergeCells',{index:index,field:'projectcode',rowspan:1,colspan:3});
+				$('#document-tb #save').linkbutton('enable');
+				$('#document-tb #cancel').linkbutton('enable');
+			}
+		});
+
+		$('#document-tb #save').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				var row = $('#document').edatagrid('getSelected');
+				var index = $('#document').datagrid('getRowIndex', row);
+				var eucid = $('#euc').edatagrid('getSelected').eucid;
+				var ed = $('#document').datagrid('getEditor',{index:index,field:'docno'});
+				var docno = $(ed.target).val();
+
+				$('#document').datagrid('updateRow',{index:index,row:{eucid:eucid, docno:docno}});
+				$('#document').edatagrid('saveRow');
+				$('#document-tb #edit').linkbutton('disable');
+				$('#document-tb #save').linkbutton('disable');
+				$('#document-tb #cancel').linkbutton('disable');
+				$('#document').datagrid('reload');
+			}
+		});
+
+		$('#document-tb #cancel').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				$('#document').edatagrid('cancelRow');
+				$('#document-tb #edit').linkbutton('disable');
+				$('#document-tb #save').linkbutton('disable');
+				$('#document-tb #cancel').linkbutton('disable');
+				$('#document').datagrid('reload');
+			}
+		});
+		$('#document').edatagrid({
+			url:	'getDoc.php',
+			saveUrl: 'saveDoc.php',
+			singleSelect:true,
+			fit:true,
+			toolbar: '#document-tb',
+			columns:[[
+			{field:'eucid', title:'EUC ID', hidden:'true'},
+			//			{field:'projectcode', title:'Project Code', hidden:'true'},
+			{field:'docid', title:'Doc ID', hidden:'true'},
+			{field:'docno',title:'Doc No.', width:100,
+				editor:{
+					type:'validatebox', options:{required:true}
+					//					type:'combobox',
+					//					options:{valueField:'projectid',textField:'projectcode',
+						//						url: function() {return 'lol';}
+						//						,required:true}
+			}},
+			{field:'docname',title:'Document Name', width:294}
+			]]
+		});
+
+		// ****************************************************************************************************************
+		// Checksums Data Grid
+		// ****************************************************************************************************************
+		$('#checksums').edatagrid({
+			url:	'getChk.php',
+			saveUrl:	'saveChk.php',
+			updateUrl: 'updateChk.php',
+			singleSelect:true,
+			fit:true,
+			toolbar: '#checksums-tb',
+			columns:[[
+			{field:'eucid', title:'EUC ID', hidden:'true'},
+			{field:'projectid', title:'Project ID', hidden:'true'},
+			{field:'checksumid', title:'Checksum ID', hidden:'true'},
+			{field:'safetyid',title:'Safety ID', hidden:'true'},
+			{field:'type',title:'Type', width:100,
+				editor:{
+					/*					type:'combobox',
+					options:{valueField:'safetyid',textField:'projectcode',url: 'getEquipment.php',required:true,
+						filter: function(q, row){
+							var opts = $(this).combobox('options');
+							if (row[opts.textField] == $('#euc').edatagrid('getSelected').projectcode) {return 0;}
+					} }
+					*/
+					type:'validatebox',
+					options:{required:true}
+			}},
+			{field:'version',title:'Version', width:100,
+				editor:{
+					type:'validatebox',
+					options:{}
+			}},
+			{field:'checksum',title:'Checksum', width:194,
+				editor:{
+					type:'validatebox',
+					options:{required:true}
+			}}
+			]],
+			onClickRow: function(index, row) {
+				$('#checksums-tb #edit').linkbutton('enable');
+			}
+		});
+
+		// ****************************************************************************************************************
+		// MRQ Data Grid
+		// ****************************************************************************************************************
+		$('#mrq-tb #add').click(function() {
+		});
+
+		$('#mrq-tb #edit').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				var row = $('#mrq').edatagrid('getSelected');
+				var index = $('#mrq').datagrid('getRowIndex', row);
+				$('#mrq').edatagrid('editRow', index);
+				$('#mrq-tb #save').linkbutton('enable');
+				$('#mrq-tb #cancel').linkbutton('enable');
+			}
+		});
+
+		$('#mrq-tb #save').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				var row = $('#mrq').edatagrid('getSelected');
+				var index = $('#mrq').datagrid('getRowIndex', row);
+				var eucid = $('#euc').edatagrid('getSelected').eucid;
+				var helpdeskid = jQuery(row.helpdeskid).text();
+				var projectid = row.projectid;
+				var ed = $('#mrq').datagrid('getEditor',{index:index,field:'checksum'});
+				var checksum = $(ed.target).val();
+
+				$('#mrq').datagrid('updateRow',{index:index, row:{helpdeskid:helpdeskid, projectid:projectid, checksum:checksum}});
+				$('#mrq').edatagrid('saveRow');
+				$('#mrq-tb #edit').linkbutton('disable');
+				$('#mrq-tb #save').linkbutton('disable');
+				$('#mrq-tb #cancel').linkbutton('disable');
+				$('#mrq').datagrid('reload');
+			}
+		});
+
+		$('#mrq-tb #cancel').click(function() {
+			if (!($(this).linkbutton('options').disabled)) {
+				$('#mrq').edatagrid('cancelRow');
+				$('#mrq-tb #edit').linkbutton('disable');
+				$('#mrq-tb #save').linkbutton('disable');
+				$('#mrq-tb #cancel').linkbutton('disable');
+				$('#mrq').datagrid('reload');
+			}
+		});
+		
+		$('#mrq').edatagrid({
+			url:	'getMRQ.php',
+			updateUrl:	'updateMRQ.php',
+			singleSelect:true,
+			fitColumns:true,
+			toolbar: '#mrq-tb',
+			columns:[[
+			{field:'projectid', title:'Project ID', hidden:'true'},
+			{field:'helpdeskid', title:'Ticket #', width:60},
+			{field:'logbyname', title:'Logged by', width:130},
+			{field:'logdate', title:'Date Logged', width:100},
+			{field:'checksum', title:'Checksum', width:150,
+				editor:{
+					type:'validatebox',
+					options:{}
+			}}
+			]],
+			onClickRow: function(index, row) {
+				$('#mrq-tb #edit').linkbutton('enable');
+			}
+		});
+
+	</script>
+</html>
