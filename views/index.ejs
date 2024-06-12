@@ -117,7 +117,7 @@
 
   <script>
     $(document).ready(function () {
-      // Array to hold the paths of the videos
+       // Array to hold the paths of the videos
     var videos = ['video1', 'video2'];
     var currentIndex = 0;
     var fadeDuration = 3000; // Fade duration in milliseconds
@@ -128,14 +128,15 @@
       var nextVideo = $('#' + videos[nextIndex]);
 
       // Fade out current video
-      currentVideo.animate({ opacity: 0 }, fadeDuration / 2, function () {
-        currentVideo.get(0).pause(); // Pause current video
+      currentVideo.addClass('fade-out').on('animationend', function() {
+        $(this).removeClass('fade-out').hide(); // Hide and reset opacity after animation
+        $(this).get(0).pause(); // Pause current video
       });
 
       // Fade in next video while current video is fading out
-      nextVideo.css({ opacity: 0, display: 'block' }); // Show next video
-      nextVideo.animate({ opacity: 1 }, fadeDuration / 2, function () {
-        nextVideo.get(0).play(); // Play next video
+      nextVideo.addClass('fade-in').css({ display: 'block' }).on('animationend', function() {
+        $(this).removeClass('fade-in'); // Reset opacity after animation
+        $(this).get(0).play(); // Play next video
       });
 
       currentIndex = nextIndex; // Update currentIndex
