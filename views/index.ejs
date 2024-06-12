@@ -118,41 +118,40 @@
   <script>
     $(document).ready(function () {
       // Array to hold the paths of the videos
-      var videos = ['video1', 'video2'];
-      var currentIndex = 0;
-      var fadeDuration = 1500; // Fade duration in milliseconds
-      var overlapDuration = 500; // Overlap duration in milliseconds
-  
-      function crossfade() {
-        var currentVideo = $('#' + videos[currentIndex]);
-        var nextIndex = (currentIndex + 1) % videos.length;
-        var nextVideo = $('#' + videos[nextIndex]);
-  
-        // Start fading out current video
-        currentVideo.animate({ opacity: 0 }, fadeDuration, function() {
-          currentVideo.get(0).pause(); // Pause current video after fading out
-          currentVideo.css('opacity', 1); // Reset opacity
-        });
-  
-        // Start fading in next video with a delay for overlap
-        nextVideo.css({ opacity: 0, display: 'block' }); // Show next video
-        nextVideo.get(0).play(); // Play next video
-        setTimeout(function() {
-          nextVideo.animate({ opacity: 1 }, fadeDuration);
-        }, overlapDuration);
-  
-        // Schedule next crossfade
-        setTimeout(function() {
-          currentIndex = nextIndex; // Update currentIndex
-          crossfade(); // Start next crossfade
-        }, currentVideo.get(0).duration - fadeDuration - overlapDuration);
-      }
-  
-      // Start the crossfade loop
-      crossfade();
-  
-      // Change video every (total duration - fade duration - overlap duration)
-      setInterval(crossfade, 15000 - fadeDuration - overlapDuration);
+    var videos = ['video1', 'video2'];
+    var currentIndex = 0;
+    var fadeDuration = 1500; // Fade duration in milliseconds
+    var overlapDuration = 500; // Overlap duration in milliseconds
+
+    function crossfade() {
+      var currentVideo = $('#' + videos[currentIndex]);
+      var nextIndex = (currentIndex + 1) % videos.length;
+      var nextVideo = $('#' + videos[nextIndex]);
+
+      // Start fading out current video
+      currentVideo.animate({ opacity: 0 }, fadeDuration, function() {
+        currentVideo.get(0).pause(); // Pause current video after fading out
+        currentVideo.css('opacity', 1); // Reset opacity
+      });
+
+      // Start fading in next video with a delay for overlap
+      nextVideo.css({ opacity: 0, display: 'block' }); // Show next video
+      nextVideo.get(0).currentTime = 0; // Reset next video's playback to the beginning
+      nextVideo.get(0).play(); // Play next video
+      nextVideo.animate({ opacity: 1 }, fadeDuration);
+
+      // Schedule next crossfade
+      setTimeout(function() {
+        currentIndex = nextIndex; // Update currentIndex
+        crossfade(); // Start next crossfade
+      }, currentVideo.get(0).duration * 1000 - fadeDuration - overlapDuration);
+    }
+
+    // Start the crossfade loop
+    crossfade();
+
+    // Change video every (total duration - fade duration - overlap duration)
+    setInterval(crossfade, 15000 - fadeDuration - overlapDuration);
       var createDataBaseModalOpen = document.getElementById('openCreateDBModal');
       createDataBaseModalOpen.addEventListener('click', openCreateDBModal);
 
