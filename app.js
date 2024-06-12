@@ -273,118 +273,6 @@ app.get('/updateIndexDropdowns', async (req, res) => {
       "FROM (dbo.tblproject JOIN dbo.tblclient ON dbo.tblproject.clientid = dbo.tblclient.clientid) " +
       "WHERE projectcode != '' AND projectcode LIKE '%P%' ORDER BY projectcode";
 
-
-
-
-    const tsResult = await tsConnection.query(tsQuery);
-
-    tsResult.forEach((tsRow) => {
-      const projCode = `tr_${tsRow.projectcode.toLowerCase()}`;
-
-      allProjects[projCode] = `${tsRow.projectcode} - ${tsRow.clientname} - ${tsRow.projectname}`;
-    });
-
-
-
-
-
-    console.log("TS connection success")
-
-
-    //await tsConnection.close();
-
-    try {
-      pdConnection = await createPdConnection();
-      console.log("MYSQL Connection success");
-    } catch (error) {
-      console.error(`Error connecting to the database: ${error.message}`);
-      console.log("MYSQL Connection unsuccessful");
-      throw error;
-    }
-
-    const pdResult = await pdConnection.query('SHOW DATABASES');
-    const pdRows = pdResult[0];
-
-
-
-    const databases = [];
-    const projectsWithoutDB = [];
-
-    pdRows.forEach((pdRow) => {
-      if (pdRow.Database.includes('tr')) {
-        databases.push(pdRow.Database.toUpperCase().substring(3, pdRow.Database.length));
-      }
-    });
-
-
-    ;
-
-    for (const projCode in allProjects) {
-      if (!databases.includes(projCode.toUpperCase().substring(3, projCode.length))) {
-        projectsWithoutDB.push(projCode.toUpperCase().substring(3, projCode.length));
-      }
-    }
-
-
-    const matchedObjects = [];
-
-    // Iterate through each item in the first array
-    databases.forEach(item => {
-      // Find matching object in the second array
-      const matchedObject = tsResult.find(obj => obj.projectcode === item);
-      // If a matching object is found, push it to the matchedObjects array
-      if (matchedObject) {
-        var projCode = "tr_" + matchedObject.projectcode.toLowerCase();
-        projects[projCode] = matchedObject.projectcode + "-" + matchedObject.clientname + "-" + matchedObject.projectname
-
-      }
-    });
-
-
-    // Get an array of keys from allProjects and projects
-    const allProjectKeys = Object.keys(allProjects);
-    const projectKeys = Object.keys(projects);
-
-    // Filter the allProjectKeys to keep only the keys that are not in projects
-    const filteredProjectKeys = allProjectKeys.filter(key => !projectKeys.includes(key));
-
-    // Construct a new object containing only the filtered projects
-    const filteredProjects = {};
-    filteredProjectKeys.forEach(key => {
-      filteredProjects[key] = allProjects[key];
-    });
-
-    // Now, filteredProjects will contain only the projects that are not present in the projects
-
-
-
-    res.json({
-      dbList: projects,
-      allProjects: filteredProjects,
-
-    });
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-    res.status(500).send('Internal Server Error');
-
-  }
-
-});
-
-
-app.get('/', async (req, res) => {
-  try {
-    const projCode = [];
-    const tsConnection = await createTsConnection();
-    console.log("TS connection success")
-    const tsQuery =
-      "SELECT projectid, dbo.tblclient.clientid, clientname, projectcode, projectname " +
-      "FROM (dbo.tblproject JOIN dbo.tblclient ON dbo.tblproject.clientid = dbo.tblclient.clientid) " +
-      "WHERE projectcode != '' AND projectcode LIKE '%P%' ORDER BY projectcode";
-
-
-
-
     const tsResult = await executeTsQuery(tsConnection, tsQuery);
     console.log("TS connection success");
 
@@ -464,24 +352,14 @@ app.get('/', async (req, res) => {
       filteredProjects[key] = allProjects[key];
     });
 
-    // Now, filteredProjects will contain only the projects that are not present in the projects
+    const sortedProjects = Object.fromEntries(Object.entries(projects).sort(([key1], [key2]) => key2.localeCompare(key1)));
+    const sortedFilteredProjects = Object.fromEntries(Object.entries(filteredProjects).sort(([key1], [key2]) => key2.localeCompare(key1)));
 
-    const reversedProjects = {};
-    const reversedFilteredProjects = {};
+    
 
-    // Reverse the projects object
-    Object.keys(projects).reverse().forEach(key => {
-      reversedProjects[key] = projects[key];
-    });
-
-    // Reverse the filteredProjects object
-    Object.keys(filteredProjects).reverse().forEach(key => {
-      reversedFilteredProjects[key] = filteredProjects[key];
-    });
-
-    res.render('index', {
-      dbList: projects,
-      allProjects: filteredProjects,
+    res.send({
+      dbList: sortedProjects,
+      allProjects: sortedFilteredProjects,
 
     });
   } catch (error) {
@@ -491,6 +369,94 @@ app.get('/', async (req, res) => {
   }
 
 });
+
+app.get('/', async (req, res) => {
+  try {
+    const projCode = [];
+    const tsConnection = await createTsConnection();
+    console.log("TS connection success")
+    const tsQuery =
+      "SELECT projectid, dbo.tblclient.clientid, clientname, projectcode, projectname " +
+      "FROM (dbo.tblproject JOIN dbo.tblclient ON dbo.tblproject.clientid = dbo.tblclient.clientid) " +
+      "WHERE projectcode != '' AND projectcode LIKE '%P%' ORDER BY projectcode";
+
+    const tsResult = await executeTsQuery(tsConnection, tsQuery);
+    console.log("TS connection success");
+
+    const allProjects = {};
+
+    tsResult.forEach((tsRow) => {
+      const projCode = `tr_${tsRow.projectcode.toLowerCase()}`;
+      allProjects[projCode] = `${tsRow.projectcode} - ${tsRow.clientname} - ${tsRow.projectname}`;
+    });
+
+    console.log("TS connection success");
+
+    try {
+      pdConnection = await createPdConnection();
+      console.log("MYSQL Connection success");
+    } catch (error) {
+      console.error(`Error connecting to the database: ${error.message}`);
+      console.log("MYSQL Connection unsuccessful");
+      throw error;
+    }
+
+    const pdResult = await pdConnection.query('SHOW DATABASES');
+    const pdRows = pdResult[0];
+
+    const databases = [];
+    const projectsWithoutDB = [];
+
+    pdRows.forEach((pdRow) => {
+      if (pdRow.Database.includes('tr')) {
+        databases.push(pdRow.Database.toUpperCase().substring(3, pdRow.Database.length));
+      }
+    });
+
+    const projects = {};
+
+    for (const projCode in allProjects) {
+      if (!databases.includes(projCode.toUpperCase().substring(3, projCode.length))) {
+        projectsWithoutDB.push(projCode.toUpperCase().substring(3, projCode.length));
+      }
+    }
+
+    const matchedObjects = [];
+
+    databases.forEach(item => {
+      const matchedObject = tsResult.find(obj => obj.projectcode === item);
+      if (matchedObject) {
+        var projCode = "tr_" + matchedObject.projectcode.toLowerCase();
+        projects[projCode] = matchedObject.projectcode + "-" + matchedObject.clientname + "-" + matchedObject.projectname;
+      }
+    });
+
+    const allProjectKeys = Object.keys(allProjects);
+    const projectKeys = Object.keys(projects);
+
+    const filteredProjectKeys = allProjectKeys.filter(key => !projectKeys.includes(key));
+
+    const filteredProjects = {};
+    filteredProjectKeys.forEach(key => {
+      filteredProjects[key] = allProjects[key];
+    });
+
+    // Sort projects and filteredProjects by keys in descending order
+    const sortedProjects = Object.fromEntries(Object.entries(projects).sort(([key1], [key2]) => key2.localeCompare(key1)));
+    const sortedFilteredProjects = Object.fromEntries(Object.entries(filteredProjects).sort(([key1], [key2]) => key2.localeCompare(key1)));
+
+    
+
+    res.render('index', {
+      dbList: sortedProjects,
+      allProjects: sortedFilteredProjects,
+    });
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 
 
 
