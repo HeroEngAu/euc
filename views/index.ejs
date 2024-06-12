@@ -117,34 +117,40 @@
 
   <script>
     $(document).ready(function () {
-       // Array to hold the paths of the videos
+    // Array to hold the paths of the videos
     var videos = ['video1', 'video2'];
     var currentIndex = 0;
-    var fadeDuration = 3000; // Fade duration in milliseconds
+    var fadeDuration = 1500; // Fade duration in milliseconds
+    var crossfadeDuration = 500; // Crossfade duration in milliseconds
 
     function crossfade() {
       var currentVideo = $('#' + videos[currentIndex]);
       var nextIndex = (currentIndex + 1) % videos.length;
       var nextVideo = $('#' + videos[nextIndex]);
 
-      // Fade out current video
-      currentVideo.addClass('fade-out').on('animationend', function() {
-        $(this).removeClass('fade-out').hide(); // Hide and reset opacity after animation
-        $(this).get(0).pause(); // Pause current video
+      // Fade out current video while playing
+      currentVideo.animate({ opacity: 0 }, fadeDuration, function() {
+        currentVideo.get(0).pause(); // Pause current video after fading out
+        currentVideo.css('opacity', 1); // Reset opacity
       });
 
-      // Fade in next video while current video is fading out
-      nextVideo.addClass('fade-in').css({ display: 'block' }).on('animationend', function() {
-        $(this).removeClass('fade-in'); // Reset opacity after animation
-        $(this).get(0).play(); // Play next video
-      });
+      // Fade in next video while playing
+      nextVideo.css({ opacity: 0, display: 'block' }); // Show next video
+      nextVideo.get(0).play(); // Play next video
+      nextVideo.animate({ opacity: 1 }, fadeDuration);
 
-      currentIndex = nextIndex; // Update currentIndex
+      // Schedule next crossfade
+      setTimeout(function() {
+        currentIndex = nextIndex; // Update currentIndex
+        crossfade(); // Start next crossfade
+      }, currentVideo.get(0).duration - crossfadeDuration);
     }
 
     // Start the crossfade loop
     crossfade();
-    setInterval(crossfade, 15000); // Change video every 15 seconds
+
+    // Change video every (total duration - crossfade duration)
+    setInterval(crossfade, 15000 - crossfadeDuration);
       var createDataBaseModalOpen = document.getElementById('openCreateDBModal');
       createDataBaseModalOpen.addEventListener('click', openCreateDBModal);
 
