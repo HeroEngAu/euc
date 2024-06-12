@@ -1060,8 +1060,11 @@ app.get('/dropdown-options', async (req, res) => {
   try {
     const pdquery_type_dv = "SELECT * FROM doctype WHERE type NOT LIKE 'TR' ORDER BY type";
     const pdresult_type_dv = await pdConnection.query(pdquery_type_dv);
+    const non_filtered_options = pdresult_type_dv[0].map(option => option.type + '-' + option.typedesc);
     const filteredOptions = pdresult_type_dv[0].filter(option => option.safety === safetyValue);
-    const options = filteredOptions.map(option => option.type + '-' + option.typedesc);
+    const filtered_options = filteredOptions.map(option => option.type + '-' + option.typedesc);
+    const options = safetyValue === 1? filtered_options:non_filtered_options;
+
     res.status(200).send({ options: options });
 
 
