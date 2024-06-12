@@ -1801,3 +1801,63 @@ function formatDate(dateString) {
   const day = String(date.getUTCDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+
+//----------------------   EUC Endpoints---------------------------------------------------//
+app.get('/euc', (req, res) => {
+  res.render('euc'); // Render euc.ejs for the '/euc' page
+});
+
+// Endpoint to handle GET request for EUC data
+app.get('/getEUC.php', async (req, res) => {
+  // Logic to fetch EUC data from the server or database
+});
+
+// Endpoint to handle POST request to save EUC data
+app.post('/saveEUC.php', async (req, res) => {
+  // Logic to save EUC data received in the request body
+});
+
+app.post('/updateEUC', async (req,res) => {
+
+});
+
+// Endpoint to handle GET request for owners data
+app.get('/getOwners.php', async (req, res) => {
+  // Logic to fetch owners data from the server or database
+});
+
+// Endpoint to handle POST request to save owners data
+app.post('/saveOwners.php', async (req, res) => {
+  // Logic to save owners data received in the request body
+});
+
+// Endpoint to handle GET request for documents data
+app.get('/getDoc.php', async (req, res) => {
+  // Logic to fetch documents data from the server or database
+});
+
+// Endpoint to handle POST request to save documents data
+app.post('/saveDoc.php', async (req, res) => {
+  // Logic to save documents data received in the request body
+});
+
+// Endpoint to handle GET request for MRQ data
+app.get('/getMRQ.php', async (req, res) => {
+  // Logic to fetch MRQ data from the server or database
+});
+
+// Endpoint to handle POST request to update MRQ data
+app.post('/updateMRQ.php', async (req, res) => {
+  // Logic to update MRQ data received in the request body
+});
+
+// Endpoint to handle GET request for checksums data
+app.get('/getChk.php', async (req, res) => {
+  // Logic to fetch checksums data from the server or database
+});
+
+// Endpoint to handle POST request to save checksums data
+app.post('/saveChk.php', async (req, res) => {
+  // Logic to save checksums data received in the request body
+});

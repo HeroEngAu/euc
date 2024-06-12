@@ -1024,7 +1024,8 @@
 
             $(document).ready(function () {
                 
-                
+               
+               
                 // Get modal element
                 var modal = document.getElementById('add-deliverable-modal');
                 // Get button that opens the modal
@@ -1412,6 +1413,10 @@
                 function openAddTransmittalModal(){
                     var modal = document.getElementById("add-transmittal-modal");
                     modal.classList.add("is-active");
+                    var modal_deliverable = document.getElementById('add-deliverable-modal');
+                    modal_deliverable.classList.remove('is-active');
+                    var sidebarToggle = document.querySelector('.menu-btn');
+                    sidebarToggle.classList.remove('open');
                     const AddDelselectTr = document.getElementById('addtr_addeloption');
                     AddDelselectTr.innerHTML = '';
                     const remDelselectTr = document.getElementById('addtr_remdeloption');
@@ -1566,10 +1571,7 @@
 
                 document.getElementById("returndate").valueAsDate = new Date();
 
-                $(".sidebar-toggle").click(function () {
-                    $(".sidebar").toggleClass("open");
-                    $("body").toggleClass("shifted");
-                });
+                
 
                 function updateTrTable(transmittals) {
                     var tableBody = $('#trtable tbody');
@@ -1940,7 +1942,11 @@
 
                 // Function to open the modal
                 function openModal() {
+                    var modal_transmittal = document.getElementById('add-transmittal-modal');
+                    var modal = document.getElementById('add-deliverable-modal');
                     modal.classList.add('is-active');
+                    modal_transmittal.classList.remove('is-active');
+           
 
 
                     $("doctype").empty();
