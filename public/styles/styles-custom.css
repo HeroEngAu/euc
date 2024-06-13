@@ -52,11 +52,20 @@ body.shifted {
 }
 
 
-/* Burger Button */
+/* Wrapper */
+.wrapper {
+  height: 100%;
+  width: 300px;
+  position: relative;
+  top: 0px;
+  border-radius: 50%;
+}
+
+/* Menu Button */
 .menu-btn {
   position: relative;
   left: 20px;
-  top: 0px;
+  top:0px;
   background: #404040;
   opacity: 80%;
   color: #fff;
@@ -69,11 +78,9 @@ body.shifted {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: left 0.3s ease, all 0.3s ease; /* Add left property to the transition */
-  cursor:pointer;
-  
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
-
 .menu-btn .burger {
   position: relative;
   width: 20px;
@@ -120,54 +127,26 @@ body.shifted {
   top: 0;
 }
 
-/* Sidebar */
-.sidebar {
-  width: 300px;
-  background-color: #202020;
-  height: 100vh;
-  position: fixed;
-  top: 50px;
-  left: -300px;
-  transition: left 0.3s ease;
-  border-radius: 0 5px 5px 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+#btn:checked ~ .menu-btn {
+  left: 247px;
 }
 
-.sidebar.open {
-  left: 0;
-}
-
-.sidebar-toggle {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 999;
-  display: block;
+.menu-btn i {
+  position: absolute;
+  font-size: 23px;
+  transition: all 0.3s ease;
   cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 0.3s;
 }
 
-.sidebar-toggle:hover {
+#btn:checked ~ .menu-btn i.fa-times {
   opacity: 1;
+  transform: rotate(-180deg);
 }
 
-/* Main Content Shift */
-body.shifted {
-  margin-left: 300px;
-  transition: margin-left 0.3s ease;
+#btn:checked ~ .menu-btn i.fa-bars {
+  opacity: 0;
+  transform: rotate(180deg);
 }
-
-/* Wrapper */
-.wrapper {
-  height: 100%;
-  width: 300px;
-  position: relative;
-  top: 0px;
-  border-radius: 50%;
-}
-
-
 
 .form-select {
   display: block;
@@ -278,7 +257,7 @@ body.shifted {
   height: 100%;
   width: 40px;
   display: block;
-  margin: 0;
+  margin: 0 5px;
   font-size: 18px;
   color: #f2f2f2;
   background: #ffffff;
