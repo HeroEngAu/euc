@@ -54,7 +54,7 @@
     <div class="content">
         <div id="header">
             <img src="images/yellow-logo.png" alt="Yellow Logo" style="width: 100px; height: 40px; margin: 0 auto; float:right">
-            <h1 class="title is-3">Hero Engineering Project Database - <%= projdb.toUpperCase().substr(3) %>
+            <h1 class="title is-3">Hero Engineering Project - <%= projdb.toUpperCase().substr(3) %>
             </h1>
             <!-- Add more HTML content for the header as needed -->
            
@@ -1417,8 +1417,9 @@
                     modal.classList.add("is-active");
                     var modal_deliverable = document.getElementById('add-deliverable-modal');
                     modal_deliverable.classList.remove('is-active');
+                    // Close the sidebar
                     var sidebarToggle = document.querySelector('.menu-btn');
-                    sidebarToggle.classList.remove('open');
+                    sidebarToggle.click(); // Trigger click event to close the sidebar
                     const AddDelselectTr = document.getElementById('addtr_addeloption');
                     AddDelselectTr.innerHTML = '';
                     const remDelselectTr = document.getElementById('addtr_remdeloption');
@@ -1948,7 +1949,8 @@
                     var modal = document.getElementById('add-deliverable-modal');
                     modal.classList.add('is-active');
                     modal_transmittal.classList.remove('is-active');
-           
+                    var sidebarToggle = document.querySelector('.menu-btn');
+                    sidebarToggle.click(); // Trigger click event to close the sidebar
 
 
                     $("doctype").empty();
