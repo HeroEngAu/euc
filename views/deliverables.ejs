@@ -1912,6 +1912,12 @@
                                                 }
                                                 // Initialize trno outside the loop
                                                 var trno = null;
+                                                
+
+                                                var projno ='<%- JSON.stringify(projdb) %>'; 
+                                                var projectnumber = projno.replace(/^"(.*)"$/, '$1').toUpperCase();
+                                                var projectnumber_upd = projectnumber.substring(3,projectnumber.length);
+                                               
                                                 // Loop through rows to get the trno value
                                                 for (var i = 0; i < rows.length; i++) {
                                                         trno = rows[i].dataset.trno; // Assuming dataset.trno holds your transmittal number
@@ -1923,7 +1929,7 @@
                                                 }
                                                 var params = JSON.stringify({
                                                         docno: trno,
-                                                        projdb: '<%- JSON.stringify(projdb) %>'
+                                                        projdb: projno
                                                 });
                                                 try {
                                                         const response = await fetch("/view-pdf", {
@@ -1943,12 +1949,21 @@
                                                         const url = URL.createObjectURL(blob); // Create a URL for the Blob
                                                         var iframe = document.getElementById('pdf');
                                                         iframe.src = url;
-                                                        // Show modal after iframe is loaded
-                                                        iframe.onload = function() {
-                                                                var modal = document.getElementById('pdf-modal');
-                                                                modal.classList.add('is-active');
-                                                        };
-                                                } catch (error) {
+                                                        // Create a download link
+                					var downloadLink = document.createElement('a');
+               						downloadLink.href = url;
+                					downloadLink.target = '_blank'; // Open in new tab
+                					downloadLink.download = `TRANSMITTAL-${projectnumber_upd}-${trno.toUpperCase()}.pdf`;
+                					downloadLink.style.display = 'none'; // Hide the link
+
+                					// Append the download link to the body
+                					document.body.appendChild(downloadLink);
+
+                					// Simulate click on the download link
+                					downloadLink.click();
+
+                					// Clean up: remove the download link from the DOM
+                					document.body.removeChild(downloadLink);                                                } catch (error) {
                                                         console.error('Error fetching PDF:', error);
                                                         // Handle error: show error message to user
                                                         alert("Failed to load PDF: " + error.message);
