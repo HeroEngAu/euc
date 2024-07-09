@@ -1363,7 +1363,11 @@ app.post('/view-pdf', async (req, res) => {
                                         }
                                         if (modification.closeout === 1) {
                                                 page.drawText("X", {
+<<<<<<< HEAD
                                                         x: 131 * units,
+=======
+                                                        x: 132 * units,
+>>>>>>> d3b84204fd07cb5299377a9bebc91d0e6741e6e0
                                                         y: height - 89 * units,
                                                         size: 8,
                                                         font: customFont,
@@ -1372,7 +1376,11 @@ app.post('/view-pdf', async (req, res) => {
                                         }
                                         if (modification.construction === 1) {
                                                 page.drawText("X", {
+<<<<<<< HEAD
                                                         x: 156 * units,
+=======
+                                                        x: 157 * units,
+>>>>>>> d3b84204fd07cb5299377a9bebc91d0e6741e6e0
                                                         y: height - 89 * units,
                                                         size: 8,
                                                         font: customFont,
@@ -1381,7 +1389,11 @@ app.post('/view-pdf', async (req, res) => {
                                         }
                                         if (modification.information === 1) {
                                                 page.drawText("X", {
+<<<<<<< HEAD
                                                         x: 104 * units,
+=======
+                                                        x: 105 * units,
+>>>>>>> d3b84204fd07cb5299377a9bebc91d0e6741e6e0
                                                         y: height - 96 * units,
                                                         size: 8,
                                                         font: customFont,
@@ -1390,7 +1402,11 @@ app.post('/view-pdf', async (req, res) => {
                                         }
                                         if (modification.quotation === 1) {
                                                 page.drawText("X", {
+<<<<<<< HEAD
                                                         x: 131 * units,
+=======
+                                                        x: 132 * units,
+>>>>>>> d3b84204fd07cb5299377a9bebc91d0e6741e6e0
                                                         y: height - 96 * units,
                                                         size: 8,
                                                         font: customFont,
@@ -1399,7 +1415,11 @@ app.post('/view-pdf', async (req, res) => {
                                         }
                                         if (modification.tender === 1) {
                                                 page.drawText("X", {
+<<<<<<< HEAD
                                                         x: 156 * units,
+=======
+                                                        x: 157 * units,
+>>>>>>> d3b84204fd07cb5299377a9bebc91d0e6741e6e0
                                                         y: height - 96 * units,
                                                         size: 8,
                                                         font: customFont,
@@ -1434,7 +1454,11 @@ app.post('/view-pdf', async (req, res) => {
                                         textAlign: 'center'
                                 });
                                 page.drawText(k, {
+<<<<<<< HEAD
                                         x: 40 * units,
+=======
+                                        x: 50 * units,
+>>>>>>> d3b84204fd07cb5299377a9bebc91d0e6741e6e0
                                         y: height - j * units,
                                         size: 7,
                                         font: customFont,
@@ -1442,7 +1466,11 @@ app.post('/view-pdf', async (req, res) => {
                                         textAlign: 'center'
                                 });
                                 page.drawText(v[0] !== '' && v[0] !== null ? rev(parseInt(v[0].substring(0, 1)))[0] + v[0].substring(1) : '-', {
+<<<<<<< HEAD
                                         x: 92 * units,
+=======
+                                        x: 90 * units,
+>>>>>>> d3b84204fd07cb5299377a9bebc91d0e6741e6e0
                                         y: height - j * units,
                                         size: 7,
                                         font: customFont,
@@ -1556,4 +1584,8 @@ function formatDate(dateString) {
         const month = String(date.getUTCMonth() + 1).padStart(2, '0');
         const day = String(date.getUTCDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> d3b84204fd07cb5299377a9bebc91d0e6741e6e0
