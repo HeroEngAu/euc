@@ -1,0 +1,975 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hero EUC Registry</title>
+    <link rel="stylesheet" type="text/css" href="./themes/material-teal/material-teal.css">
+    <link rel="stylesheet" type="text/css" href="./themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="./demo/demo.css">
+
+    <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="datagrid-detailview.js"></script>
+    <script type="text/javascript" src="jquery.edatagrid.js"></script>
+</head>
+
+<body class="easyui-layout">
+    <div data-options="region:'north',border:false" style="height:60px">
+        <div id="header" style="text-align:center;font: 3em Arial, Helvetica, sans-serif; padding: 7px; width: 90%;">EUC Safety Related
+            Modification Log </div>
+       
+    </div>
+    <div data-options="region:'west',border:false" style="width:100px">
+    </div>
+    <div data-options="region:'center',border:false" style="width:auto">
+        <div id="euc-tb">
+            <a id="addEUC" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" style="float: left;"
+                onclick="addEUC()">Add Equipment Under Control</a>
+
+        </div>
+        <table id="euc"></table>
+    </div>
+    <div id="dlg-popup" class="easyui-dialog" style="width:800px;height:450px;padding:10px 20px" closed="true" buttons="#dlg-buttons-popup">
+        <div id="properties" data-options="region:'east'" style="width: 100%; height: 100%;">
+            <div id="aa" class="easyui-accordion" style="height: 350px;">
+                <div title="Previous Owners" data-options="iconCls:'icon-search',selected:true" style="">
+                    <div id="owners-tb">
+                        <a id="addOwner" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true"
+                            style="float: left;" onclick="addOwner()">Add New Owner</a>
+                    </div>
+                    <table id="owners"></table>
+                </div>
+                <div title="Related Documents" data-options="iconCls:'icon-edit'" style="">
+                    <div id="document-tb">
+                        <a id="addDocument" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true"
+                            style="float: left;" onclick="addDocument()">Add new Document</a>
+                    </div>
+                    <table id="document"></table>
+                </div>
+                <div title="MRQ Helpdesk Tickets & Checksums" data-options="iconCls:'icon-help'">
+                    <table id="mrq"></table>
+                </div>
+                <div title="Software Configuration Management" data-options="iconCls:'icon-search'">
+                    <table id="sw"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="dlg-euc" class="easyui-dialog" style="width:400px;height:280px;padding:10px 20px" closed="true"
+        buttons="#dlg-buttons-euc">
+        <div class="ftitle">EUC Information</div>
+        <form id="fm-euc" method="post" novalidate>
+            <div class="fitem">
+                <label>EUC Description:</label>
+                <input name="eucdescription" class="easyui-textbox" required="true">
+            </div>
+            <div class="fitem">
+                <label>Project Code:</label>
+                <select class="easyui-combobox" name="projectcode" label="Project Code:" labelPosition="left"
+                    style="width: 70%;"
+                    data-options="url:'/getProjCodes', method:'get', valueField:'projectid', textField:'projectdesc'"></select>
+
+
+            </div>
+            <div class="fitem">
+                <label>Decommission Date:</label>
+                <input id="dd" name="datedecom" type="text" class="easyui-datebox" required="required"
+                    data-options="formatter:dateFormatter,parser:dateParser">
+            </div>
+        </form>
+    </div>
+
+    <div id="dlg-owner" class="easyui-dialog" style="width:400px;height:280px;padding:10px 20px" closed="true"
+        buttons="#dlg-buttons-owner">
+        <div class="ftitle">Owner Information</div>
+        <form id="fm-owner" method="post" novalidate>
+            <div class="fitem">
+                <label>Owner:</label>
+                <input name="ownerdesc" class="easyui-textbox" required="true">
+            </div>
+            <div class="fitem">
+                <label>Date Owned:</label>
+                <input id="do" name="dateowned" class="easyui-datebox" required="required"
+                    data-options="formatter:dateFormatter,parser:dateParser">
+            </div>
+        </form>
+    </div>
+    <div id="dlg-doc" class="easyui-dialog" style="width:400px;height:280px;padding:10px 20px" closed="true"
+    buttons="#dlg-buttons-doc">
+    <div class="ftitle">Document Information</div>
+    <form id="fm-doc" method="post" novalidate>
+        <div class="fitem">
+            <label>Document Number:</label>
+            <select  id="docnumber" style="width: 80%;"></select>
+            </select>
+        </div>
+    </form>
+</div>
+
+
+    <div id="dlg-sw" class="easyui-dialog" style="width: 800px; height: 300px; padding: 10px 20px;" closed="true"
+        buttons="#dlg-buttons-sw">
+        <div class="ftitle">Software Configuration Management</div>
+        <form id="fm-sw" method="post" novalidate>
+            <div class="fitem">
+                <label>Application Description:</label>
+                <input name="applicationdesc" class="easyui-textbox" required="true">
+            </div>
+            <div class="fitem">
+                <label>Application Version:</label>
+                <input name="applicationversion" class="easyui-textbox" required="true">
+            </div>
+            <div class="fitem">
+                <label>Application Checksum:</label>
+                <input name="applicationchecksum" class="easyui-textbox">
+            </div>
+            <div class="fitem">
+                <label>Software Required:</label>
+                <input name="softwarerequired" class="easyui-textbox" required="true">
+            </div>
+            <div class="fitem">
+                <label>Code Revision:</label>
+                <select name="coderevision" class="easyui-combobox" required="true" style="width: 40%;"
+                    data-options="url:'/getRevisionCodes', method:'get', valueField:'rev', textField: 'revdesc'">
+
+                </select>
+
+            </div>
+            <div class="fitem">
+                <label>Revision Date:</label>
+                <input name="revisiondate" class="easyui-datebox" required="true"
+                    data-options="formatter:dateFormatter,parser:dateParser">
+            </div>
+            <div class="fitem">
+                <label>Baseline Creator:</label>
+                <input name="baselinecreator" class="easyui-textbox" required="true">
+            </div>
+            <div class="fitem">
+                <label>Comments:</label>
+                <input name="comments" class="easyui-textbox" required="true">
+            </div>
+        </form>
+    </div>
+
+
+    <div id="dlg-buttons-euc">
+        <a href="javascript:void(0)" class="easyui-linkbutton c6" iconCls="icon-ok" onclick="saveEUC()"
+            style="width:90px">Save</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel"
+            onclick="javascript:$('#dlg-euc').dialog('close')" style="width:90px">Cancel</a>
+    </div>
+
+    <div id="dlg-buttons-owner">
+        <a href="javascript:void(0)" class="easyui-linkbutton c6" iconCls="icon-ok" onclick="saveOwner()"
+            style="width:90px">Save</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel"
+            onclick="javascript:$('#dlg-owner').dialog('close')" style="width:90px">Cancel</a>
+    </div>
+    <div id="dlg-buttons-doc">
+        <a href="javascript:void(0)" class="easyui-linkbutton c6" iconCls="icon-ok" onclick="saveDoc()"
+            style="width:90px">Save</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel"
+            onclick="javascript:$('#dlg-doc').dialog('close')" style="width:90px">Cancel</a>
+    </div>
+    <div id="dlg-buttons-sw">
+        <a href="javascript:void(0)" class="easyui-linkbutton c6" iconCls="icon-ok" onclick="saveSW()"
+            style="width:90px">Save</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel"
+            onclick="javascript:$('#dlg-sw').dialog('close')" style="width:90px">Cancel</a>
+    </div>
+    <div id="sw-tb">
+        <a id="addSW" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" style="float: left;"
+            onclick="addSW()">Add Software Config. Metadata</a>
+
+    </div>
+
+
+    <script>
+        
+        $(document).ready(function() {
+            
+        // ****************************************************************************************************************
+        // EUC Datagrid
+        // ****************************************************************************************************************
+
+        $('#dlg-popup').dialog({
+            title: 'Popup Window',
+            width: 800,
+            height: 450,
+            closed: true, // Start with closed
+            modal: true, // Make it modal (blocks the background)
+            buttons: [{
+                text: 'Close',
+                iconCls: 'icon-cancel',
+                handler: function() {
+                    $('#dlg-popup').dialog('close');
+                }
+            }]
+        });
+
+        $('#euc').edatagrid({
+            url: '/getEUC',
+            method: 'get',
+            singleSelect: true,
+            fit: true,
+            fitColumns: true,
+            rownumbers: true,
+            toolbar: '#euc-tb',
+            columns: [[
+                { field: 'eucid', title: 'EUC ID', hidden: 'true' },
+                { field: 'projectid', title: 'Project ID', hidden: 'true' },
+                {
+                    field: 'eucdesc', title: 'EUC Description', width: 350,
+                    editor: {
+                        type: 'text',
+                        options: { required: true }
+                    }
+                },
+                {
+                    field: 'projectcode', title: 'Project Code', width: 200, editor: {
+                        type: 'combobox',
+                        options: {
+                            valueField: 'projectcode',
+                            textField: 'projectdesc',
+                            method: 'get',
+                            url: '/getProjCodes',
+                            required: true,
+                            onSelect: function (record) {
+                                var rowIndex = getRowIndex(this);
+
+                                if (rowIndex >= 0) {
+
+
+                                    var row = $('#euc').edatagrid('getRows')[rowIndex];
+
+                                    row.clientname = record.clientname;
+                                    row.projectname = record.projectname;
+                                    row.projectid = record.projectid;
+                                    row.clientid = record.clientid;
+                                    row.clientname = record.clientname;
+                                    row.projectcode = record.projectcode;
+                                    $('#euc').edatagrid('updateRow', {
+
+                                        index: rowIndex,
+                                        row: row,
+                                        onSuccess: function () {
+                                            console.log('Row updated visually:', row);
+                                            // Update the database via AJAX
+
+                                        }
+                                    });
+
+
+
+                                }
+                            }
+
+                        }
+                    }
+                },
+                { field: 'clientname', title: 'Client', width: 200 },
+                { field: 'projectname', title: 'Project Name', width: 250 },
+                {
+                    field: 'datedecom', title: 'Decommission Date', width: 200,
+                    editor: {
+                        type: 'datebox',
+                        options: {
+                            formatter: dateFormatter,
+                            parser: dateParser
+                        }
+                    }
+                },
+                {
+                    field: 'action', title: 'Action', width: 100, align: 'center',
+                    formatter: function (value, row, index) {
+                        if (row.editing) {
+                            var s = '<a href="javascript:void(0)" onclick="saverowEUC(\'euc\', this)" style="color:green;font-size:16px;"><b>Save</b></a> ';
+                            var c = '<a href="javascript:void(0)" onclick="cancelrow(\'euc\', this)" style="color:red;font-size:16px;"><b>Cancel</b></a>';
+                            return s + c;
+                        } else {
+                            var e = '<a href="javascript:void(0)" onclick="editrow(\'euc\', this)" style="color:#8B4513;font-size:18px;"><b>Edit</b></a> ';
+
+                            return e;
+                        }
+                    }
+                }
+            ]],
+            onEndEdit: function (index, row) {
+                var ed = $(this).datagrid('getEditor', {
+                    index: index,
+                    field: 'projectcode'
+                });
+                row.projectcode = $(ed.target).combobox('getValue');
+            },
+            onBeforeEdit: function (index, row) {
+                row.editing = true;
+                $(this).datagrid('refreshRow', index);
+            },
+            onAfterEdit: function (index, row) {
+                row.editing = false;
+                $(this).datagrid('refreshRow', index);
+            },
+            onCancelEdit: function (index, row) {
+                row.editing = false;
+                $(this).datagrid('refreshRow', index);
+            },
+
+            onClickRow: function (index, row) {
+
+                
+                if (row && row.projectcode && row.eucid && row.projectid) {
+                    $('#dlg-popup').dialog('open');
+                    $('#owners').datagrid('load', { eucid: row.eucid });
+                    $('#document').datagrid('load', { eucid: row.eucid, projectcode: row.projectcode, ownerid: row.ownerid });
+                    $('#mrq').datagrid('load', { projectid: row.projectid });
+                    $('#sw').datagrid('load', { projectid: row.projectid, eucid: row.eucid });
+
+                } else {
+                    $('#owners').datagrid('loadData', { total: 0, rows: [] }); // Clear owners datagrid if no valid row is selected
+                    $('#document').datagrid('loadData', { total: 0, rows: [] }); // Clear document datagrid if no valid row is selected
+                    $('#mrq').datagrid('loadData', { total: 0, rows: [] }); // Clear mrq datagrid if no valid row is selected
+                    $('#sw').datagrid('loadData', { total: 0, rows: [] }); // Clear document datagrid if no valid row is selected
+                }
+            },
+          
+                
+
+
+        });
+
+
+
+        // ****************************************************************************************************************
+        // Owners Datagrid
+        // ****************************************************************************************************************
+        $('#owners').edatagrid({
+            url: '/getOwners',
+            method: 'get',
+            singleSelect: true,
+            fit: true,
+            toolbar: '#owners-tb',
+            columns: [[
+                { field: 'ownerid', title: 'Owner Id', hidden: 'true' },
+                { field: 'eucid', title: 'EUC ID', hidden: 'true' },
+                { field: 'ownerid', title: 'Owner ID', hidden: 'true' },
+                {
+                    field: 'ownerdesc', title: 'Owner', width: 'auto',
+                    editor: {
+                        type: 'text',
+                        options: { required: true }
+                    }
+                },
+                {
+                    field: 'dateowned', title: 'Date Owned', width: 'auto',
+                    editor: {
+                        type: 'datebox',
+                        options: {
+                            formatter: dateFormatter,
+                            parser: dateParser
+                        }
+                    }
+                },
+                {
+                    field: 'action', title: 'Action', width: 'auto', align: 'center',
+                    formatter: function (value, row, index) {
+                        if (row.editing) {
+                            var s = '<a href="javascript:void(0)" onclick="saveRowOwner(\'owners\', this)" style="color:green;font-size:16px;"><b>Save</b></a> ';
+                            var c = '<a href="javascript:void(0)" onclick="cancelrow(\'owners\', this)" style="color:red;font-size:16px;"><b>Cancel</b></a>';
+                            return s + c;
+                        } else {
+                            var e = '<a href="javascript:void(0)" onclick="editrow(\'owners\', this)" style="color:#8B4513;font-size:16px;"><b>Edit</b></a> ';
+
+                            return e;
+                        }
+                    }
+                }
+            ]],
+            onEndEdit: function (index, row) {
+                var ed = $(this).datagrid('getEditor', {
+                    index: index,
+                    field: 'ownerdesc'
+                });
+                row.ownerdesc = $(ed.target).val();
+            },
+            onBeforeEdit: function (index, row) {
+                row.editing = true;
+                $(this).datagrid('refreshRow', index);
+                console.log(row);
+            },
+            onAfterEdit: function (index, row) {
+                row.editing = false;
+                $(this).datagrid('refreshRow', index);
+            },
+            onCancelEdit: function (index, row) {
+                row.editing = false;
+                $(this).datagrid('refreshRow', index);
+            },
+
+
+
+        });
+         // ****************************************************************************************************************
+        // Document Datagrid
+        // ****************************************************************************************************************
+
+        $('#document').edatagrid({
+            url: '/getDoc',
+            method: 'get',
+            singleSelect: true,
+            fit: true,
+            fitColumns: true,
+            toolbar: '#document-tb',
+            columns: [[
+                { field: 'eucid', title: 'EUC ID', hidden: 'true' },
+                { field: 'projectcode', title: 'Project Code', hidden: 'true' },
+                { field: 'docid', title: 'Doc ID', hidden: 'true' },
+                { field: 'docno', title: 'Doc Number', width: 'auto' },
+                { field: 'docname', title: 'Document Name', width: 'auto' }
+             
+            ]]
+        });
+
+        $('#mrq').edatagrid({
+            url: '/getMRQ',
+            method: 'get',
+            singleSelect: true,
+            fitColumns: true,
+            toolbar: '#mrq-tb',
+            columns: [[
+                { field: 'projectid', title: 'Project ID', hidden: 'true' },
+                { field: 'helpdeskid', title: 'Ticket #', width: 60 },
+                { field: 'logbyname', title: 'Logged by', width: 130 },
+                { field: 'logdate', title: 'Date Logged', width: 100 },
+                {
+                    field: 'checksum', title: 'Checksum', width: 150,
+                    editor: {
+                        type: 'text',
+                        options: {}
+                    }
+                }
+            ]]
+        });
+         // ****************************************************************************************************************
+        // Software Datagrid
+        // ****************************************************************************************************************
+
+        
+                $('#sw').edatagrid({
+                    url: '/getSW',
+                    method: 'get',
+                    toolbar: '#sw-tb', // Reference to the toolbar HTML
+                    singleSelect: true,
+                    fitColumns: true,
+        
+                    columns: [[
+                        { field: 'projectid', title: 'Project ID', width: 60 },
+                        { field: 'eucid', title: 'EUC Id', width: 60 },
+                        { field: 'applicationdesc', title: 'Application Desc', width: 130, editor: 'text' },
+                        { field: 'applicationversion', title: 'Application Version', width: 100, editor: 'text'  },
+                        { field: 'applicationchecksum', title: 'Checksum', width: 150, editor: 'text'  },
+                        { field: 'softwarerequired', title: 'Software Required', width: 150, editor: 'text'  },
+                        {
+                            field: 'coderevision', title: 'Code Revision', width: 150, editor: {
+                                type: 'combobox',
+                                options: {
+                                    valueField: 'rev',
+                                    textField: 'revdesc',
+                                    method: 'get',
+                                    url: '/getRevisionCodes',
+                                    required: true,
+                                    onSelect: function (record) {
+                                        var rowIndex = getRowIndex(this);
+
+                                        if (rowIndex >= 0) {
+
+
+                                            var row = ddv.edatagrid('getRows')[rowIndex];
+
+                                            row.coderevision = record.coderevision;
+                                            
+                                            ddv.edatagrid('updateRow', {
+
+                                                index: rowIndex,
+                                                row: row,
+                                                onSuccess: function () {
+                                                    console.log('Row updated visually:', row);
+                                                    // Update the database via AJAX
+
+                                                }
+                                            });
+
+
+
+                                        }
+                                    }
+
+                                }
+                            }
+                        },
+                        { field: 'revisiondate', title: 'Revision Date', width: 150, editor: {
+                            type: 'datebox',
+                            options: {
+                                formatter: dateFormatter,
+                                parser: dateParser
+                                    }
+                            }
+                        },
+                        { field: 'baselinecreator', title: 'Baseline Creator', width: 150, editor: 'text' },
+                        { field: 'comments', title: 'Comments', width: 300, editor: 'text' },
+                        {
+                            field: 'action', title: 'Action', width: 100, align: 'center',
+                            formatter: function (value, row, index) {
+                                if (row.editing) {
+                                    var s = '<a href="javascript:void(0)" onclick="saverowSW(\'sw\', this)" style="color:green;font-size:16px;"><b>Save</b></a> ';
+                                    var c = '<a href="javascript:void(0)" onclick="cancelrow(\'sw\', this)" style="color:red;font-size:16px;"><b>Cancel</b></a>';
+                                    return s + c;
+                                } else {
+                                    var e = '<a href="javascript:void(0)" onclick="editrow(\'sw\', this)" style="color:#8B4513;font-size:18px;"><b>Edit</b></a> ';
+        
+                                    return e;
+                                }
+                            }
+                        }
+                    ]],
+                   
+                    onEndEdit: function (index, row) {
+                        var ed = $(this).datagrid('getEditor', {
+                            index: index,
+                            field: 'coderevision'
+                        });
+                        row.coderevision = $(ed.target).combobox('getValue');
+                    },
+                    onBeforeEdit: function (index, row) {
+                        row.editing = true;
+                        $(this).datagrid('refreshRow', index);
+                    },
+                    onAfterEdit: function (index, row) {
+                        row.editing = false;
+                        $(this).datagrid('refreshRow', index);
+                    },
+                    onCancelEdit: function (index, row) {
+                        row.editing = false;
+                        $(this).datagrid('refreshRow', index);
+                    },
+                });
+             
+
+
+        
+
+        });
+        function addSW() {
+            var row = $('#euc').datagrid('getSelected');
+            if (row) {
+                $('#dlg-sw').dialog('open').dialog('setTitle', 'Add New Software Change');
+                $('#fm-sw').form('clear');
+
+
+
+                url = '/saveSW'; // Set save URL for form submission
+            } else {
+                $.messager.show({
+                    title: 'Error',
+                    msg: '<span style="color:red;">Please select an EUC to add a Software Change.</span>'
+                });
+            }
+        }
+
+
+
+        function saveSW() {
+            var row = $('#euc').datagrid('getSelected');
+            $('#fm-sw').form('submit', {
+                url: url,
+                onSubmit: function (param) {
+                    param.eucid = row.eucid;
+                    param.projectid = row.projectid;
+                    return $(this).form('validate');
+                },
+                success: function (result) {
+                    try {
+                        var resultObj = JSON.parse(result); // Parse the result as JSON object
+                        if (resultObj.errorMsg) {
+                            $.messager.show({
+                                title: 'Error',
+                                msg: resultObj.errorMsg
+                            });
+                        } else {
+                            $('#dlg-sw').dialog('close'); // Close the dialog
+                            $('#euc').datagrid('reload'); // Reload the user data
+                        }
+                    } catch (error) {
+                        console.error('Error parsing JSON response:', error);
+                        $.messager.show({
+                            title: 'Error',
+                            msg: 'Failed to parse server response.'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error submitting document:', error);
+                    $.messager.show({
+                        title: 'Error',
+                        msg: 'Failed to submit software change.'
+                    });
+                }
+            });
+        }
+
+
+
+
+        function addDocument() {
+            var row = $('#euc').datagrid('getSelected');
+           
+            if (row) {
+                console.log(row.projectcode);
+                $('#dlg-doc').dialog('open').dialog('setTitle', 'Add New Document');
+                $('#fm-doc').form('clear');
+        
+                // Load data into the combobox with project code as a query parameter
+               
+             
+                $('#docnumber').combobox({
+                    url: '/getDocuments',
+                    method: 'get',
+                    valueField: 'docno',
+                    textField: 'displayField',
+                    queryParams: {
+                        projectcode: row.projectcode  // Pass project code as a query parameter
+                    },
+                    required: true,
+                    onSelect: function(record) {
+                        // Handle selection if needed
+                    },
+                    onLoadSuccess: function(data) {
+                        console.log('Data loaded successfully:', data); // Log the loaded data
+                    },
+                    onError: function() {
+                        console.error('Error loading data'); // Handle error if any
+                    }
+                });
+                
+        
+                url = '/saveDoc'; // Assuming you set this URL for form submission
+            } else {
+                $.messager.show({
+                    title: 'Error',
+                    msg: '<span style="color:red;">Please select an EUC to add a document.</span>'
+                });
+            }
+        }
+        
+
+
+
+
+        function saveDoc() {
+            var row = $('#euc').datagrid('getSelected');
+            $('#fm-doc').form('submit', {
+                url: url,
+                onSubmit: function (param) {
+                    param.eucid = row.eucid;
+                    param.projectcode = row.projectcode;
+                    param.docnumber = $('#docnumber').combobox('getValue');
+                    return $(this).form('validate');
+                },
+                success: function (result) {
+                    try {
+                        var resultObj = JSON.parse(result); // Parse the result as JSON object
+                        if (resultObj.errorMsg) {
+                            $.messager.show({
+                                title: 'Error',
+                                msg: resultObj.errorMsg
+                            });
+                        } else {
+                            $('#dlg-doc').dialog('close'); // Close the dialog
+                            $('#document').datagrid('reload'); // Reload the user data
+                            $('#euc').datagrid('reload'); // Reload the user data
+                            $('#dlg-popup').dialog('close');
+
+                        }
+                    } catch (error) {
+                        console.error('Error parsing JSON response:', error);
+                        $.messager.show({
+                            title: 'Error',
+                            msg: 'Failed to parse server response.'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error submitting document:', error);
+                    $.messager.show({
+                        title: 'Error',
+                        msg: 'Failed to submit document.'
+                    });
+                }
+            });
+        }
+
+
+
+        function addEUC() {
+            $('#dlg-euc').dialog('open').dialog('setTitle', 'Add New EUC');
+            $('#fm-euc').form('clear');
+            url = '/saveEUC';
+        }
+
+        function saveEUC() {
+            $('#fm-euc').form('submit', {
+                url: url,
+                onSubmit: function () {
+                    return $(this).form('validate');
+                },
+                success: function (result) {
+                    var result = eval('(' + result + ')');
+                    if (result.errorMsg) {
+                        $.messager.show({
+                            title: 'Error',
+                            msg: result.errorMsg
+                        });
+                    } else {
+                        $('#dlg-euc').dialog('close');        // close the dialog
+                        $('#euc').datagrid('reload');    // reload the user data
+                    }
+                }
+            });
+        }
+        // Add Owner function
+        function addOwner() {
+            var row = $('#euc').datagrid('getSelected');
+            if (row) {
+                $('#dlg-owner').dialog('open').dialog('center').dialog('setTitle', 'Add Owner');
+                $('#fm-owner').form('clear');
+                $('#fm-owner').form('load', row);
+                url = '/saveOwner';
+            } else {
+                $.messager.show({
+                    title: '<span style="color:red:">Error</span>',
+                    msg: '<span style="color:red;">Please select an EUC to add a document.</span>'
+                });
+            }
+        }
+
+        // Save Owner function
+        function saveOwner() {
+            var row = $('#euc').datagrid('getSelected');
+            console.log(row);
+            if (row) {
+                $('#fm-owner').form('submit', {
+                    url: url,
+                    onSubmit: function (param) {
+                        param.eucid = row.eucid;
+                        return $(this).form('validate');
+                    },
+                    success: function (result) {
+                        var result = eval('(' + result + ')');
+                        if (result.errorMsg) {
+                            $.messager.show({
+                                title: 'Error',
+                                msg: result.errorMsg
+                            });
+                        } else {
+                            $('#dlg-owner').dialog('close');
+                            $('#owners').edatagrid('reload');
+                            $('#dlg-popup').dialog('close');
+                        }
+                    }
+                });
+            }
+        }
+
+
+        function getRowIndex(target) {
+            var tr = $(target).closest('tr.datagrid-row');
+            return parseInt(tr.attr('datagrid-row-index'));
+        }
+        function editrow(gridId, target) {
+            var rowIndex = getRowIndex(target);
+
+            // Collapse the row if it's expanded
+            $('#' + gridId).datagrid('collapseRow', rowIndex);
+
+            // Begin editing the row
+            $('#' + gridId).datagrid('beginEdit', rowIndex);
+        }
+
+
+
+
+        function saveRowOwner(gridId, target) {
+            var rowIndex = getRowIndex(target);
+            var row = $('#' + gridId).datagrid('getRows')[rowIndex];
+            $('#' + gridId).datagrid('endEdit', rowIndex);
+            var rowData = {
+                eucid: row.eucid,
+                ownerdesc: row.ownerdesc,
+                ownerid: row.ownerid,
+                dateowned: row.dateowned,
+
+            };
+            $.ajax({
+                url: '/UpdateOwner',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(rowData),
+                success: function (response) {
+                    console.log('Row updated successfully:', response);
+                    // Optionally handle success response here
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error updating row:', error);
+                    // Optionally handle error response here
+                }
+            });
+
+        }
+
+
+        function saveRowSW(gridId, target) {
+            var rowIndex = getRowIndex(target);
+            var row = $('#' + gridId).datagrid('getRows')[rowIndex];
+            $('#' + gridId).datagrid('endEdit', rowIndex);
+        
+            var rowData = {
+                eucid: row.eucid,
+                applicationdesc: row.applicationdesc,
+                applicationversion: row.applicationversion,
+                applicationchecksum: row.applicationchecksum,
+                softwarerequired: row.softwarerequired,
+                coderevision: row.coderevision,
+                revisiondate: row.revisiondate,
+                baselinecreator: row.baselinecreator,
+                comments: row.comments
+            };
+        
+            $.ajax({
+                url: '/UpdateSW',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(rowData),
+                success: function (response) {
+                    console.log('Row updated successfully:', response);
+                     // Update the datagrid row after successful updates
+                     $('#euc').edatagrid('updateRow', {
+                        index: rowIndex,
+                        row: row
+                    });
+
+                    // Reload the datagrid to reflect changes
+                    $('#euc').datagrid('reload'); // or $('#euc').datagrid('load');
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error updating row:', error);
+                    // Optionally handle error response here
+                }
+            });
+        }
+        
+
+        function saverowEUC(gridId, target) {
+            var rowIndex = getRowIndex(target);
+            $('#' + gridId).datagrid('collapseRow', rowIndex);
+            var row = $('#' + gridId).datagrid('getRows')[rowIndex];
+            $('#' + gridId).datagrid('endEdit', rowIndex);
+
+            // Prepare data to send to the server
+            var rowData = {
+                eucid: row.eucid,
+                eucdesc: row.eucdesc,
+                projectcode: row.projectcode,
+                clientname: row.clientname,
+                projectname: row.projectname,
+                datedecom: row.datedecom,
+                projectid: row.projectid
+            };
+
+            // Perform AJAX POST request to update Equipment Under Control
+            $.ajax({
+                url: '/UpdateEUC',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(rowData),
+                success: function (response) {
+                    console.log('Row updated successfully:', response);
+
+                    // Update the database via AJAX for SWRow
+                    $.ajax({
+                        url: '/updateSWRow',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            eucid: row.eucid,
+                            projectid: row.projectid
+                        }),
+                        success: function (response) {
+                            console.log('SWRow updated successfully:', response);
+
+                            // Update the datagrid row after successful updates
+                            $('#euc').edatagrid('updateRow', {
+                                index: rowIndex,
+                                row: row
+                            });
+
+                            // Reload the datagrid to reflect changes
+                            $('#euc').datagrid('reload'); // or $('#euc').datagrid('load');
+
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Failed to update SWRow:', error);
+                        }
+                    });
+
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error updating row:', error);
+                    // Optionally handle error response here
+                }
+            });
+
+            // End editing locally after successful request (if needed)
+        }
+
+        function cancelrow(gridId, target) {
+
+
+            var rowIndex = getRowIndex(target);
+
+            // Collapse the row if it's expanded
+            $('#' + gridId).datagrid('collapseRow', rowIndex);
+
+            // Begin editing the row
+            $('#' + gridId).datagrid('cancelEdit', rowIndex);
+        }
+
+        function dateFormatter(date) {
+            if (date instanceof Date) {
+                var y = date.getFullYear();
+                var m = date.getMonth() + 1;
+                var d = date.getDate();
+                return y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d) + ' 00:00:00';
+            }
+            return '';
+        }
+
+        // Parser function to parse input value back into a Date object
+        function dateParser(s) {
+            if (!s) return new Date();
+            var ss = (s.split(' '))[0].split('-');
+            var y = parseInt(ss[0], 10);
+            var m = parseInt(ss[1], 10);
+            var d = parseInt(ss[2], 10);
+            if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+                return new Date(y, m - 1, d);
+            } else {
+                return new Date();
+            }
+        }
+
+
+
+    </script>
+</body>
+
+</html>
