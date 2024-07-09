@@ -1311,32 +1311,78 @@
                                 return "TR-" + nextTrNumber.toString().padStart(4, "0");
                         }
 
-                        function viewPDF() {
+                        async function viewPDF() {
+                                var viewPDFTransmittalButton = document.querySelectorAll('#view-pdf-button');
                                 var table = document.getElementById('trtable');
                                 var rows = table.getElementsByClassName('clickable-row active');
+                                if (rows.length === 0) {
+                                  console.error('No active rows found');
+                                  return;
+                                }
                                 // Initialize trno outside the loop
-                                var trno;
+                                var trno = null;
+                              
+                                var projno = '<%- JSON.stringify(projdb) %>';
+                                var projectnumber = projno.replace(/^"(.*)"$/, '$1').toUpperCase();
+                                var projectnumber_upd = projectnumber.substring(3, projectnumber.length);
+                              
                                 // Loop through rows to get the trno value
                                 for (var i = 0; i < rows.length; i++) {
-                                        trno = rows[i].dataset.trno;
+                                  trno = rows[i].dataset.trno; // Assuming dataset.trno holds your transmittal number
+                                  console.log("Transmittal number found:", trno);
                                 }
-                                console.log("The transmittal number is: ", trno);
+                                if (!trno) {
+                                  console.error('Failed to retrieve transmittal number');
+                                  return;
+                                }
                                 var params = JSON.stringify({
-                                        docno: trno,
-                                        projdb: '<%- JSON.stringify(projdb) %>'
+                                  docno: trno,
+                                  projdb: projno
                                 });
-                                $.ajax({
-                                        url: "/getEUC",
-                                        method: "GET",
-                                        contentType: 'application/json',
-                                        success: function(response) {
-                                                console.log(response);
-                                        },
-                                        error: function(error) {
-                                                console.error("Error:", error);
-                                        }
-                                });
-                        }
+                                try {
+                                  const response = await fetch("/view-pdf", {
+                                    method: "POST",
+                                    headers: {
+                                      "Content-Type": "application/json"
+                                    },
+                                    body: params
+                                  });
+                                  if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                  }
+                                  const arrayBuffer = await response.arrayBuffer(); // Get the response as an ArrayBuffer
+                                  const blob = new Blob([arrayBuffer], {
+                                    type: 'application/pdf'
+                                  });
+                                  const url = URL.createObjectURL(blob); // Create a URL for the Blob
+                                  var iframe = document.getElementById('pdf');
+                                  iframe.src = url;
+                                  // Create a download link
+                                  var downloadLink = document.createElement('a');
+                                  downloadLink.href = url;
+                                  downloadLink.target = '_blank'; // Open in new tab
+                                  downloadLink.download = `TRANSMITTAL-${projectnumber_upd}-${trno.toUpperCase()}.pdf`;
+                                  downloadLink.style.display = 'none'; // Hide the link
+                              
+                                  // Append the download link to the body
+                                  document.body.appendChild(downloadLink);
+                              
+                                  // Simulate click on the download link
+                                  downloadLink.click();
+                              
+                                  // Clean up: remove the download link from the DOM
+                                  document.body.removeChild(downloadLink);
+                                } catch (error) {
+                                  console.error('Error fetching PDF:', error);
+                                  // Handle error: show error message to user
+                                  alert("Failed to load PDF: " + error.message);
+                                }
+                              }
+                
+                
+        
+
+                        
 
                         function emptyRequiredAddTr() {
                                 const trName = document.getElementById('addtrno').innerText;
