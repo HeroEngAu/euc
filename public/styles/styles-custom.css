@@ -63,14 +63,14 @@ body.shifted {
 
 /* Menu Button */
 .menu-btn {
-  position: relative;
+  position: fixed;
+  top: 20px;
   left: 20px;
-  top:0px;
   background: #404040;
   opacity: 80%;
   color: #fff;
-  height: 50px;
-  width: 50px;
+  height: 30px;
+  width: 30px;
   z-index: 9999;
   border: 1px solid #ffffff;
   border-radius: 50%;
@@ -104,11 +104,11 @@ body.shifted {
 }
 
 .menu-btn .burger::before {
-  top: -10px;
+  top: -5px;
 }
 
 .menu-btn .burger::after {
-  top: 10px;
+  top: 5px;
 }
 
 /* Burger Animation */
@@ -382,11 +382,6 @@ element.style {
   margin-left: 200px;
 
 }
-
-
-
-
-
 #deldiv {
   font-family: 'Poppins', sans-serif;
   position: relative;
@@ -853,4 +848,3 @@ section {
 .container-cdb{
   background-color: #f0f0f0;
 }
-
