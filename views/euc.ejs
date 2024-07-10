@@ -9,8 +9,8 @@
 
     <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.min.js"></script>
     <script type="text/javascript" src="https://www.jeasyui.com/easyui/jquery.easyui.min.js"></script>
-    <script type="text/javascript" src="datagrid-detailview.js"></script>
-    <script type="text/javascript" src="jquery.edatagrid.js"></script>
+    <script type="text/javascript" src="./datagrid-detailview.js"></script>
+    <script type="text/javascript" src="./jquery.edatagrid.js"></script>
 </head>
 
 <body class="easyui-layout">
@@ -622,12 +622,10 @@
 
         function addDocument() {
             var row = $('#euc').datagrid('getSelected');
-           
+            $('#dlg-doc').dialog('open').dialog('setTitle', 'Add New Document');
             if (row) {
-                console.log(row.projectcode);
-                $('#dlg-doc').dialog('open').dialog('setTitle', 'Add New Document');
-                $('#fm-doc').form('clear');
-        
+             
+               
                 // Load data into the combobox with project code as a query parameter
                
              
@@ -644,7 +642,10 @@
                         // Handle selection if needed
                     },
                     onLoadSuccess: function(data) {
-                        console.log('Data loaded successfully:', data); // Log the loaded data
+                                // After data is loaded, open dialog and clear form
+                        
+                  
+
                     },
                     onError: function() {
                         console.error('Error loading data'); // Handle error if any
@@ -678,6 +679,15 @@
                 success: function (result) {
                     try {
                         var resultObj = JSON.parse(result); // Parse the result as JSON object
+                        var count = resultObj.count; // Assuming your response contains a count of matching records
+                        if (count > 0) {
+                            // If a record already exists, show a message and return
+                            $.messager.show({
+                                title: 'Error',
+                                msg: 'Duplicate entry: This document already exists for the specified EUC.'
+                            });
+                            return;
+                        }
                         if (resultObj.errorMsg) {
                             $.messager.show({
                                 title: 'Error',

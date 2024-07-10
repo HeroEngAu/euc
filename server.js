@@ -8,7 +8,6 @@ const { createPdConnection, createTsConnection, executeTsQuery, dbinit, tblinit 
 const { updateTables } = require('./updateTablesFunction'); // Import the updateTables function
 const ejs = require('ejs');
 
-app.engine('ejs', ejs.renderFile);
 app.use(express.static('public'));
 app.use(express.json());
 app.use(bodyParser.json());
@@ -448,7 +447,7 @@ const { count } = rows[0];
 
 if (count > 0) {
 // If a record already exists with the same (docno, eucid), return a 409 Conflict status
-return res.status(409).json({ message: 'Duplicate entry: This document already exists for the specified EUC.' });
+return res.status(409).json({ message: 'Duplicate entry: This document already exists for the specified EUC.', count: count });
 }
 
 // If no duplicate, proceed to insert the new document record

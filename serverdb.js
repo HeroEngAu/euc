@@ -4,7 +4,7 @@ const sql = require('mssql');
 const { ConnectionPool } = require('tedious-connection-pool');
 
 // MySQL Database parameters
-const pdServer = "192.168.0.169";
+const pdServer = "192.168.0.143";
 const pdUser = "dbserver";
 const pdPass = "hero123@";
 
