@@ -27,7 +27,7 @@ const config = {
   server: '192.168.0.5',
   database: 'TIMESITE',
   pool: {
-    max: 10,
+    max: 100,
     min: 0,
     idleTimeoutMillis: 30000
   },

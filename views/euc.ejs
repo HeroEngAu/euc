@@ -14,11 +14,14 @@
 </head>
 
 <body class="easyui-layout">
-    <div data-options="region:'north',border:false" style="height:60px">
-        <div id="header" style="text-align:center;font: 3em Arial, Helvetica, sans-serif; padding: 7px; width: 90%;">EUC Safety Related
-            Modification Log </div>
-       
+    <div data-options="region:'north', border:false" style="height: 60px;">
+        <div id="header" style="text-align: center; font: 3em Arial, Helvetica, sans-serif; padding: 7px; width: 90%; position: relative;">
+          EUC Safety Related Modification Log
+           <a href="https://www.heroengineering.com.au" alt="heroengineering.com.au"><img src="./themes/material-teal/images/yellow-logo.png" style="width: 100px; height: 40px; position: absolute; top: 50%; transform: translateY(-50%); right: 10px;"></a>
+        </div>
     </div>
+    
+    
     <div data-options="region:'west',border:false" style="width:100px">
     </div>
     <div data-options="region:'center',border:false" style="width:auto">
@@ -131,7 +134,7 @@
             <div class="fitem">
                 <label>Code Revision:</label>
                 <select name="coderevision" class="easyui-combobox" required="true" style="width: 40%;"
-                    data-options="url:'/getRevisionCodes', method:'get', valueField:'rev', textField: 'revdesc'">
+                    data-options="url:'/getRevisionCodes', method:'get', valueField:'rev', textField: 'displayvalue'">
 
                 </select>
 
@@ -484,11 +487,11 @@
                                         if (rowIndex >= 0) {
 
 
-                                            var row = ddv.edatagrid('getRows')[rowIndex];
+                                            var row = $('#sw').edatagrid('getRows')[rowIndex];
 
                                             row.coderevision = record.coderevision;
                                             
-                                            ddv.edatagrid('updateRow', {
+                                            $('#sw').edatagrid('updateRow', {
 
                                                 index: rowIndex,
                                                 row: row,
@@ -567,7 +570,7 @@
 
 
 
-                url = '/saveSW'; // Set save URL for form submission
+                url = '/euc/saveSW'; // Set save URL for form submission
             } else {
                 $.messager.show({
                     title: 'Error',
@@ -598,6 +601,8 @@
                         } else {
                             $('#dlg-sw').dialog('close'); // Close the dialog
                             $('#euc').datagrid('reload'); // Reload the user data
+			    $('#sw').datagrid('reload'); // Reload the user data
+
                         }
                     } catch (error) {
                         console.error('Error parsing JSON response:', error);
