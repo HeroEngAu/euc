@@ -139,6 +139,12 @@
                 </select>
 
             </div>
+         
+		    <div class="fitem">
+                <label>Code Subrevision:</label>
+                <input name="codesubrevision" class="easyui-textbox" required="true">
+            </div>
+
             <div class="fitem">
                 <label>Revision Date:</label>
                 <input name="revisiondate" class="easyui-datebox" required="true"
@@ -510,6 +516,8 @@
                                 }
                             }
                         },
+                        { field: 'codesubrevision', title: 'Code Subrevision', width: 150, editor: 'text'},
+                        
                         { field: 'revisiondate', title: 'Revision Date', width: 150, editor: {
                             type: 'datebox',
                             options: {
@@ -601,7 +609,7 @@
                         } else {
                             $('#dlg-sw').dialog('close'); // Close the dialog
                             $('#euc').datagrid('reload'); // Reload the user data
-			    $('#sw').datagrid('reload'); // Reload the user data
+			                $('#sw').datagrid('reload'); // Reload the user data
 
                         }
                     } catch (error) {

@@ -7,12 +7,14 @@ const port = 5000;
 const { createPdConnection, createTsConnection, executeTsQuery, dbinit, tblinit } = require('./serverdb');
 const { updateTables } = require('./updateTablesFunction'); // Import the updateTables function
 const ejs = require('ejs');
-
-app.use(express.static('public'));
-app.use(express.json());
+// Set the view engine to EJS
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '/views'));
+// Middleware to serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, '/public')));app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.set('view engine', 'ejs');
+
 
 //Initialize variables
 let pdConnection = null;
@@ -46,13 +48,18 @@ SELECT revid, rev, revdesc
 FROM code_revisions
 ORDER BY revid;`;
 
-const [rows] = await pdConnection.query(query); // Execute SQL query
+const rows = await pdConnection.query(query); // Execute SQL query
+const response = rows[0].map(item => {
+  item.displayvalue = item.rev + "-" + item.revdesc
+  return item;
+
+});
 
 // Close connection after query execution
 await pdConnection.end();
 
 // Send response with JSON data
-res.status(200).json(rows);
+res.status(200).json(response);
 
 } catch (error) {
 console.error('Error fetching revision codes:', error);
@@ -291,16 +298,16 @@ res.status(500).json({ message: 'Error fetching project codes' }); // Send 500 e
 
 app.post('/saveSW', async (req, res) => {
 try {
-const { projectid, eucid, applicationdesc, applicationversion, applicationchecksum, softwarerequired, coderevision, revisiondate, baselinecreator, comments } = req.body;
+const { projectid, eucid, applicationdesc, applicationversion, applicationchecksum, softwarerequired, coderevision,codesubrevision, revisiondate, baselinecreator, comments } = req.body;
 
 // Assuming pdConnection is your MySQL connection pool
 const sql = `
 INSERT INTO software_changes
-(projectid, eucid, applicationdesc, applicationversion, applicationchecksum, softwarerequired, coderevision, revisiondate, baselinecreator, comments)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+(projectid, eucid, applicationdesc, applicationversion, applicationchecksum, softwarerequired, coderevision,codesubrevision, revisiondate, baselinecreator, comments)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `;
 
-const values = [projectid, eucid, applicationdesc, applicationversion, applicationchecksum, softwarerequired, coderevision, revisiondate, baselinecreator, comments];
+const values = [projectid, eucid, applicationdesc, applicationversion, applicationchecksum, softwarerequired, coderevision,codesubrevision, revisiondate, baselinecreator, comments];
 
 const result = await pdConnection.query(sql, values);
 
@@ -345,7 +352,7 @@ const { projectcode, eucdescription, datedecom } = req.body;
 // req.body will contain all the form fields and their values
 // For example:
 
-const sql = 'INSERT INTO euc (projectid, eucdesc, datedecom) VALUES (?, ?, ?)';
+const sql = 'INSERT INTO hero_eucdb.euc (projectid, eucdesc, datedecom) VALUES (?, ?, ?)';
 const values = [projectcode, eucdescription, datedecom];
 await pdConnection.query(sql, values)
 res.json({ message: 'EUC data submitted successfully' });
@@ -434,7 +441,6 @@ res.status(500).json({ message: 'Error fetching documents' }); // Send 500 error
 }
 });
 
-// Endpoint to handle POST request to save documents data
 app.post('/saveDoc', async (req, res) => {
 try {
 const { eucid, docnumber } = req.body;
@@ -462,7 +468,6 @@ console.error('Error submitting document:', error);
 res.status(500).json({ message: 'Error submitting document' });
 }
 });
-
 app.post('/updateOwner', async (req, res) => {
 try {
 const { eucid, ownerdesc, ownerid, dateowned } = req.body;
@@ -559,7 +564,7 @@ await pdConnection.end();
 });
 
 // Endpoint to handle POST request to update MRQ data
-app.post('/updateMRQ.php', async (req, res) => {
+app.post('/updateMRQ', async (req, res) => {
 // Logic to update MRQ data received in the request body
 });
 
@@ -593,12 +598,12 @@ res.status(500).json({ error: 'Internal server error' });
 });
 
 // Endpoint to handle GET request for checksums data
-app.get('/getChk.php', async (req, res) => {
+app.get('/getChk', async (req, res) => {
 // Logic to fetch checksums data from the server or database
 });
 
 // Endpoint to handle POST request to save checksums data
-app.post('/saveChk.php', async (req, res) => {
+app.post('/saveChk', async (req, res) => {
 // Logic to save checksums data received in the request body
 });
 

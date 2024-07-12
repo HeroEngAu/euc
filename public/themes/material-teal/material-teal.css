@@ -88,6 +88,7 @@
 }
 .panel-body-noheader {
   border-top-width: 1px;
+  padding-right: 80px;
 }
 .panel-body-noborder {
   border-width: 0px;

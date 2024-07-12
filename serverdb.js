@@ -73,6 +73,7 @@ const dbinit = {
       applicationchecksum VARCHAR(255),
       softwarerequired VARCHAR(255),
       coderevision VARCHAR(10),
+      codesubrevision VARCHAR(10),
       revisiondate DATETIME,
       baselinecreator VARCHAR(255),
       comments VARCHAR(255),
@@ -92,14 +93,14 @@ const dbinit = {
   const tblinit = {
     "code_revisions": `
       INSERT IGNORE INTO code_revisions (revid, rev, revdesc) VALUES  
-      (1, 'A', 'Preliminary Design'),
-      (2, 'B', 'Internal Review'),
-      (3, 'C', 'Client Review'),
-      (4, 'D', 'Client Review'),
-      (5, '0', 'Issued For Construction'),
-      (6, '1', 'Asbuilt')
+      (1, 'A', 'Initial Baseline'),
+      (2, 'B', 'Ready for Internal Review'),
+      (3, 'C', 'Ready for Testing'),
+      (4, '0', 'Issued for Implementation'),
+      (5, '1', 'Asbuilt')
     `
   };
+
 
 module.exports = {
   createPdConnection,
